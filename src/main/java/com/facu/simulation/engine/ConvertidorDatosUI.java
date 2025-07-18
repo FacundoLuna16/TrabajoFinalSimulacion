@@ -133,6 +133,7 @@ public class ConvertidorDatosUI {
         dto.setMinTiempoPermanencia(fila.getMinTiempoPermanencia());
         dto.setAcumuladorTiempoEsperaBahia(fila.getAcumuladorTiempoEsperaBahia());
         dto.setContadorBarcosAtendidos(fila.getContadorBarcosAtendidos());
+        dto.setContadorBarcosQueEsperaronEnBahia(fila.getContadorBarcosQueEsperonEnBahia()); // FALTABA ESTE MAPEO
         dto.setMediaTiempoPermanencia(fila.getMediaTiempoPermanencia());
 
         dto.setMuelle1AcTiempoOcupado(fila.getMuelle1AcTiempoOcupado());
