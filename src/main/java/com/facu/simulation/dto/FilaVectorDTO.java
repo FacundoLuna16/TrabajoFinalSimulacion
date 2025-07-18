@@ -51,6 +51,7 @@ public class FilaVectorDTO {
     private double minTiempoPermanencia;
     private double acumuladorTiempoEsperaBahia;
     private int contadorBarcosAtendidos;
+    private int contadorBarcosQueEsperaronEnBahia; // NUEVO: cuenta barcos que salieron de bahía
     private double mediaTiempoPermanencia;
     
     // Utilizaciones acumuladas

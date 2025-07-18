@@ -86,7 +86,7 @@ public class GeneradorColumnasTabla {
         datos.add(formatearTiempo(fila.getMaxTiempoPermanencia())); // "MaxTPer"
         datos.add(formatearTiempo(fila.getMinTiempoPermanencia())); // "MinTPer"
         datos.add(formatearTiempo(fila.getAcumuladorTiempoEsperaBahia())); // "AcTPer"
-        datos.add(fila.getContadorBarcosAtendidos());       // "CantB"
+        datos.add(fila.getContadorBarcosQueEsperaronEnBahia());       // "CantB" - Ahora cuenta barcos que esperaron en bahía
         datos.add(formatearTiempo(fila.getMediaTiempoPermanencia())); // "MedTPer"
         datos.add(formatearTiempo(fila.getMuelle1AcTiempoOcupado())); // "M1AcTOc"
         datos.add(String.format("%.2f", fila.getMuelle1Utilizacion())); // "M1Ut%"

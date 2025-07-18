@@ -97,6 +97,7 @@ public class Simulador {
 
 
         Barco primerBarco = new Barco(1, tiempoLlegada, 0.0);
+        this.contadorBarcosGenerados ++;
 
         Evento primeraLlegada = new LlegadaBarco(tiempoLlegada, primerBarco);
         fel.add(primeraLlegada);
@@ -247,6 +248,22 @@ public class Simulador {
         barco.setTiempoLlegadaSistema(reloj);
 
         cargarDatosPreviosFinLlegada();
+
+        // Copiar métricas de tiempo de permanencia desde ultimaFilaVector
+        if (ultimaFilaVector != null) {
+            actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
+            actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
+            actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
+            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia());
+            
+            // Recalcular media con los datos actuales
+            if (actualFilaVector.getContadorBarcosQueEsperanEnBahia() > 0) {
+                double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperanEnBahia();
+                actualFilaVector.setMediaTiempoPermanencia(media);
+            } else {
+                actualFilaVector.setMediaTiempoPermanencia(0.0);
+            }
+        }
 
         // 3. Decidir el camino del barco
         if (muelleLibre != null) {
@@ -405,7 +422,8 @@ public class Simulador {
             if (grua.estaLibre() && gruasAsignadas < cantidadGruas) {
                 grua.setEstado(EstadoGrua.OCUPADA);
                 grua.setBarcoAsignado(barco);
-                muelleDelBarco.asignarGrua(); // <<<--- ESTO FALTABA
+                grua.setTiempoInicioOcupado(reloj); // ¡ESTO ES LO QUE FALTABA!
+                muelleDelBarco.asignarGrua();
                 gruasAsignadas++;
                 if (grua.getId() == 1) {
                     this.actualFilaVector.setGrua1Estado(EstadoGrua.OCUPADA);
@@ -436,6 +454,8 @@ public class Simulador {
         if (actualFilaVector.getContadorBarcosQueEsperanEnBahia() > 0) {
             double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperanEnBahia();
             actualFilaVector.setMediaTiempoPermanencia(media);
+        } else {
+            actualFilaVector.setMediaTiempoPermanencia(0.0);
         }
     }
 
