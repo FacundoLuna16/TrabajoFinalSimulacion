@@ -82,6 +82,10 @@ public class FilaVector {
         this.muelle2InicioOcupado = 0.0;
         this.grua1InicioOcupado = 0.0;
         this.grua2InicioOcupado = 0.0;
+        this.muelle1AcTiempoOcupado = 0.0;
+        this.muelle2AcTiempoOcupado = 0.0;
+        this.grua1AcTiempoOcupado = 0.0;
+        this.grua2AcTiempoOcupado = 0.0;
         
         // Los demás campos se irán llenando según el estado del simulador
     }

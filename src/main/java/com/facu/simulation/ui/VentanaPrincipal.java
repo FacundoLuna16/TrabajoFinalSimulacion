@@ -266,7 +266,7 @@ public class VentanaPrincipal extends JFrame {
         horizontalScrollBar.setUI(new ModernScrollBarUI());
 
         // Configurar el scroll pane
-        scrollPane.setBorder(crearBordeCard("Tabla de Simulación"));
+        scrollPane.setBorder(null);
         scrollPane.setBackground(COLOR_FONDO_CARD);
         scrollPane.getViewport().setBackground(COLOR_FONDO_CARD);
 

@@ -296,9 +296,9 @@ public class Simulador {
                 this.actualFilaVector.setFinDescarga2(tiempoDescargaBase + this.reloj);
                 this.actualFilaVector.setTiempoRestanteMuelle2(tiempoDescargaBase);
             }
-
-            // Llamar a la lógica de reasignación y recálculo
-            reasignarGruasYRecalcularTiempos();
+//
+//            // Llamar a la lógica de reasignación y recálculo
+//            reasignarGruasYRecalcularTiempos();
 
         } else {
             // NO HAY MUELLE LIBRE
@@ -393,12 +393,20 @@ public class Simulador {
 
             // DETERMINAR QUÉ MUELLE SE LIBERÓ Y GUARDAR RND CORRESPONDIENTE
             if (muelleOcupado.getId() == 1) {
+                // actualizar el acumulador de tiempo ocupado del muelle 1
+                this.actualFilaVector.setMuelle1AcTiempoOcupado(this.ultimaFilaVector.getMuelle1AcTiempoOcupado() +
+                        (reloj - this.ultimaFilaVector.getMuelle1InicioOcupado()));
+
                 this.actualFilaVector.setMuelle1Estado(EstadoMuelle.OCUPADO);
                 this.actualFilaVector.setMuelle1InicioOcupado(reloj);
                 this.actualFilaVector.setRndDescargaMuelle1(rndDescarga);
                 this.actualFilaVector.setFinDescarga1(tiempoDescargaBase + this.reloj);
                 this.actualFilaVector.setTiempoRestanteMuelle1(tiempoDescargaBase);
             } else if (muelleOcupado.getId() == 2) {
+                // actualizar el acumulador de tiempo ocupado del muelle 2
+                this.actualFilaVector.setMuelle2AcTiempoOcupado(this.ultimaFilaVector.getMuelle2AcTiempoOcupado() +
+                        (reloj - this.ultimaFilaVector.getMuelle2InicioOcupado()));
+
                 this.actualFilaVector.setMuelle2Estado(EstadoMuelle.OCUPADO);
                 this.actualFilaVector.setMuelle2InicioOcupado(reloj);
                 this.actualFilaVector.setRndDescargaMuelle2(rndDescarga);
@@ -406,7 +414,6 @@ public class Simulador {
                 this.actualFilaVector.setTiempoRestanteMuelle2(tiempoDescargaBase);
             }
         }else {
-            // TODO ARMAR LA TABLA DE MAX MIN ACUMULADORES
             // Copiar métricas de tiempo de permanencia desde ultimaFilaVector
             if (ultimaFilaVector != null) {
                 actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
@@ -600,13 +607,15 @@ public class Simulador {
         for (Muelle muelle : muelles) {
             if (muelle.getId() == 1) {
                 this.actualFilaVector.setMuelle1Estado(muelle.getEstado());
-                if (muelle.estaOcupado()) {
-                    this.actualFilaVector.setMuelle1InicioOcupado(muelle.getTiempoInicioOcupado());
+                if (this.actualFilaVector.getMuelle1InicioOcupado() == 0.0 && muelle.estaOcupado()) {
+                    this.actualFilaVector.setMuelle1InicioOcupado(this.ultimaFilaVector.getMuelle1InicioOcupado());
                 }
+
+
             } else if (muelle.getId() == 2) {
                 this.actualFilaVector.setMuelle2Estado(muelle.getEstado());
-                if (muelle.estaOcupado()) {
-                    this.actualFilaVector.setMuelle2InicioOcupado(muelle.getTiempoInicioOcupado());
+                if (this.actualFilaVector.getMuelle2InicioOcupado() == 0.0 && muelle.estaOcupado()) {
+                    this.actualFilaVector.setMuelle2InicioOcupado(this.ultimaFilaVector.getMuelle2InicioOcupado());
                 }
             }
         }
@@ -615,19 +624,21 @@ public class Simulador {
         for (Grua grua : gruas) {
             if (grua.getId() == 1) {
                 this.actualFilaVector.setGrua1Estado(grua.getEstado());
-                if (grua.estaOcupada()) {
-                    this.actualFilaVector.setGrua1InicioOcupado(grua.getTiempoInicioOcupado());
+                    if (grua.estaOcupada() && this.ultimaFilaVector.getGrua1InicioOcupado() != grua.getTiempoInicioOcupado()) {
+                        this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado() +
+                                (this.reloj - this.ultimaFilaVector.getGrua1InicioOcupado()));
+                        this.actualFilaVector.setGrua1InicioOcupado(grua.getTiempoInicioOcupado());
                 }
             } else if (grua.getId() == 2) {
                 this.actualFilaVector.setGrua2Estado(grua.getEstado());
-                if (grua.estaOcupada()) {
+                if (grua.estaOcupada() && this.ultimaFilaVector.getGrua2InicioOcupado() != grua.getTiempoInicioOcupado()) {
+                    this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
+                            (this.reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
                     this.actualFilaVector.setGrua2InicioOcupado(grua.getTiempoInicioOcupado());
                 }
             }
         }
 
-        // 5. Actualizar acumuladores de tiempo ocupado
-        actualizarAcumuladoresTiempo();
 
 //        // 6. Actualizar estadísticas de barcos
         // Calcular media de tiempo de permanencia en bahía
@@ -636,6 +647,21 @@ public class Simulador {
             actualFilaVector.setMediaTiempoPermanencia(media);
         } else {
             actualFilaVector.setMediaTiempoPermanencia(0.0);
+        }
+
+        //validacion para repetir filas si no hice un recalculo de tiempos
+        if (this.actualFilaVector.getMuelle1AcTiempoOcupado() == 0.0) {
+            this.actualFilaVector.setMuelle1AcTiempoOcupado(this.ultimaFilaVector.getMuelle1AcTiempoOcupado());
+        }
+        if (this.actualFilaVector.getMuelle2AcTiempoOcupado() == 0.0) {
+            this.actualFilaVector.setMuelle2AcTiempoOcupado(this.ultimaFilaVector.getMuelle2AcTiempoOcupado());
+        }
+        // Actualizar acumuladores de tiempo ocupado de grúas
+        if (this.actualFilaVector.getGrua1AcTiempoOcupado() == 0.0) {
+            this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado());
+        }
+        if (this.actualFilaVector.getGrua2AcTiempoOcupado() == 0.0) {
+            this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado());
         }
 
         // 7. Actualizar porcentajes de utilización
@@ -697,40 +723,6 @@ public class Simulador {
         fel.add(proximaLlegada);
     }
 
-    // ==================== MÉTODOS DE ACCESO PARA RESULTADOS ====================
-
-    /**
-     * Actualiza los acumuladores de tiempo ocupado de muelles y grúas.
-     */
-    private void actualizarAcumuladoresTiempo() {
-        double tiempoTranscurrido = this.reloj - this.ultimaFilaVector.getTiempo();
-
-        // Actualizar acumuladores de muelles
-        for (Muelle muelle : muelles) {
-            if (muelle.estaOcupado()) {
-                if (muelle.getId() == 1) {
-                    double tiempoOcupado = this.actualFilaVector.getMuelle1AcTiempoOcupado();
-                    this.actualFilaVector.setMuelle1AcTiempoOcupado(tiempoOcupado + tiempoTranscurrido);
-                } else if (muelle.getId() == 2) {
-                    double tiempoOcupado2 = this.actualFilaVector.getMuelle2AcTiempoOcupado();
-                    this.actualFilaVector.setMuelle2AcTiempoOcupado(tiempoOcupado2 + tiempoTranscurrido);
-                }
-            }
-        }
-
-        // Actualizar acumuladores de grúas
-        for (Grua grua : gruas) {
-            if (grua.estaOcupada()) {
-                if (grua.getId() == 1) {
-                    double tiempoOcupado = this.actualFilaVector.getGrua1AcTiempoOcupado();
-                    this.actualFilaVector.setGrua1AcTiempoOcupado(tiempoOcupado + tiempoTranscurrido);
-                } else if (grua.getId() == 2) {
-                    double tiempoOcupado = this.actualFilaVector.getGrua2AcTiempoOcupado();
-                    this.actualFilaVector.setGrua2AcTiempoOcupado(tiempoOcupado + tiempoTranscurrido);
-                }
-            }
-        }
-    }
 
 
 
