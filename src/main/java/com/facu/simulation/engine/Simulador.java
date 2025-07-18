@@ -270,6 +270,7 @@ public class Simulador {
 
             // NUEVA LÓGICA: Generar RND específico según qué muelle se asigne
             barco.setEstado(EstadoBarco.SIENDO_DESCARGADO);
+            barco.setTiempoInicioDescarga(reloj);
             double rndDescarga = generador.generarNumeroAleatorio();
             double tiempoDescargaBase = generador.convertirAUniforme(rndDescarga,
                     configuracion.getTiempoDescargaMin(), configuracion.getTiempoDescargaMax());
@@ -374,8 +375,10 @@ public class Simulador {
             }
 
             // Hay barcos esperando y hay un muelle libre
-
-            barcoEsperando.setEstado(EstadoBarco.SIENDO_DESCARGADO);
+            if (barcoEsperando.getEstado().equals(EstadoBarco.EN_BAHIA)) {
+                barcoEsperando.setEstado(EstadoBarco.SIENDO_DESCARGADO);
+                barcoEsperando.setTiempoInicioDescarga(reloj);
+            }
 
             // Generar RND específico según qué muelle se libera
             double rndDescarga = generador.generarNumeroAleatorio();
