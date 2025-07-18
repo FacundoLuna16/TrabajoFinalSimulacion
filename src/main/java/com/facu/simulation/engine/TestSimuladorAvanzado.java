@@ -1,6 +1,11 @@
 package com.facu.simulation.engine;
 
 import com.facu.simulation.dto.ResultadosSimulacionDTO;
+import com.facu.simulation.model.Barco;
+import com.facu.simulation.model.EstadoBarco;
+import com.facu.simulation.model.EstadoMuelle;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestSimuladorAvanzado {
@@ -12,7 +17,7 @@ public class TestSimuladorAvanzado {
             0.5,   // Tiempo mínimo de descarga: 0.5 días
             1.5,   // Tiempo máximo de descarga: 1.5 días
             2,     // Cantidad de muelles: 2
-            2,     // Cantidad de grúas: 2  
+            2,     // Cantidad de grúas: 2
             10,    // Días de simulación: 10 días
             0,    // Mostrar desde fila 25 (cuando ya hay más actividad)
             10,    // Hasta fila 35
@@ -26,7 +31,7 @@ public class TestSimuladorAvanzado {
         // Solo imprimir estadísticas finales para verificar funcionamiento
         System.out.println("Simulación completada exitosamente!");
         System.out.println("Mostrando tabla de eventos de los últimos días...\n");
-        
+
         // Imprimir la tabla de resultados directamente desde los vectores de estado
         imprimirTablaSimulacion(simulador.getVectoresEstado());
     }
@@ -35,8 +40,8 @@ public class TestSimuladorAvanzado {
         // 1. Encabezado de la tabla - AHORA 100% CORRECTO
         System.out.printf("%-5s | %-25s | %-10s | %-12s | %-12s | %-15s | %-15s | %-15s | %-15s | %-10s | " +
                         "%-25s | %-20s | %-25s | %-20s | %-25s | %-20s | %-25s | %-20s | %-25s | %-25s | " +
-                        "%-30s | %-15s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | " + 
-                        "%-25s | %-20s | %-15s | %-25s | %-25s | %-15s | %-25s | %-25s%n", 
+                        "%-30s | %-15s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | " +
+                        "%-25s | %-20s | %-15s | %-25s | %-25s | %-15s | %-25s | %-25s%n",
                 "Fila", "Evento", "Reloj", "RND Llegada", "Prox Llegada",
                 "RND Descarga 1", "Fin Descarga 1", "RND Descarga 2", "Fin Descarga 2", "Bahia Cola",
                 "Muelle 1 Estado", "M1 Inicio Ocup.", "Muelle 2 Estado", "M2 Inicio Ocup.",
@@ -47,19 +52,49 @@ public class TestSimuladorAvanzado {
                 "Barcos en Sistema", "B_Slot1_ID", "B_Slot1_Estado", "B_Slot1_T_Ingreso",
                 "B_Slot2_ID", "B_Slot2_Estado", "B_Slot2_T_Ingreso");
 
-        // 2. Imprimir cada fila (esta parte ya estaba bien)
+        // 2. Imprimir cada fila con manejo de datos seguro
         for (FilaVector fila : vectores) {
-            String rndLlegadaStr = (fila.getRndLlegada() == -1.0) ? "" : String.format("%.4f", fila.getRndLlegada());
-            String rndDescargaM1Str = (fila.getRndDescargaMuelle1() == -1.0) ? "" : String.format("%.4f", fila.getRndDescargaMuelle1());
-            String rndDescargaM2Str = (fila.getRndDescargaMuelle2() == -1.0) ? "" : String.format("%.4f", fila.getRndDescargaMuelle2());
-            String finDescarga1Str = (fila.getFinDescarga1() == -1.0) ? "" : String.format("%.2f", fila.getFinDescarga1());
-            String finDescarga2Str = (fila.getFinDescarga2() == -1.0) ? "" : String.format("%.2f", fila.getFinDescarga2());
+            // --- Preparar strings para valores que pueden estar vacíos ---
+            String rndLlegadaStr = (fila.getRndLlegada() > 0) ? String.format("%.4f", fila.getRndLlegada()) : "";
+            String finDescarga1Str = (fila.getFinDescarga1() > 0) ? String.format("%.2f", fila.getFinDescarga1()) : "";
+            String rndDescargaM1Str = (fila.getRndDescargaMuelle1() > 0) ? String.format("%.4f", fila.getRndDescargaMuelle1()) : "";
+            String finDescarga2Str = (fila.getFinDescarga2() > 0) ? String.format("%.2f", fila.getFinDescarga2()) : "";
+            String rndDescargaM2Str = (fila.getRndDescargaMuelle2() > 0) ? String.format("%.4f", fila.getRndDescargaMuelle2()) : "";
 
-            // TU PRINTF EXACTO CON VALORES SEGUROS
+            // --- Lógica para encontrar los barcos en los muelles ---
+            Barco barcoEnMuelle1 = null;
+            Barco barcoEnMuelle2 = null;
+            if (fila.getBarcosEnSistema() != null) {
+                // Hacemos una copia para no modificar la lista original
+                List<Barco> barcosDescargando = new ArrayList<>();
+                for(Barco b : fila.getBarcosEnSistema()) {
+                    if (b.getEstado() == EstadoBarco.SIENDO_DESCARGADO) {
+                        barcosDescargando.add(b);
+                    }
+                }
+                // Asignamos los barcos a los muelles ocupados
+                if (fila.getMuelle1Estado() == EstadoMuelle.OCUPADO && !barcosDescargando.isEmpty()) {
+                    barcoEnMuelle1 = barcosDescargando.remove(0);
+                }
+                if (fila.getMuelle2Estado() == EstadoMuelle.OCUPADO && !barcosDescargando.isEmpty()) {
+                    barcoEnMuelle2 = barcosDescargando.remove(0);
+                }
+            }
+
+            // --- Preparar variables para los slots de barcos, asegurando que no haya nulls ---
+            int b1_id = (barcoEnMuelle1 != null) ? barcoEnMuelle1.getId() : 0;
+            String b1_estado = (barcoEnMuelle1 != null && barcoEnMuelle1.getEstado() != null) ? barcoEnMuelle1.getEstado().toString() : "";
+            String b1_t_ingreso = (barcoEnMuelle1 != null) ? String.format("%.2f", barcoEnMuelle1.getTiempoLlegadaSistema()) : "";
+
+            int b2_id = (barcoEnMuelle2 != null) ? barcoEnMuelle2.getId() : 0;
+            String b2_estado = (barcoEnMuelle2 != null && barcoEnMuelle2.getEstado() != null) ? barcoEnMuelle2.getEstado().toString() : "";
+            String b2_t_ingreso = (barcoEnMuelle2 != null) ? String.format("%.2f", barcoEnMuelle2.getTiempoLlegadaSistema()) : "";
+
+            // --- Llamada final a printf con todos los datos preparados y seguros ---
             System.out.printf("%-5d | %-25s | %-10.2f | %-12s | %-12.2f | %-15s | %-15s | %-15s | %-15s | %-10d | " +
-                            "%-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25.2f | %-25.2f | " +
-                            "%-30.2f | %-15d | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | " +
-                            "%-25d | %-20d | %-15s | %-25s | %-25s | %-15d | %-25s | %-25s%n",
+                            "%-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25.4f | %-25.4f | " +
+                            "%-30.2f | %-15d | %-25.4f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | " +
+                            "%-25.2f | %-20s | %-15d | %-25s | %-25s | %-15d | %-25s | %-25s%n",
                     fila.getNumeroFila(),
                     fila.getEvento(),
                     fila.getTiempo(),
@@ -69,44 +104,41 @@ public class TestSimuladorAvanzado {
                     finDescarga1Str,
                     rndDescargaM2Str,
                     finDescarga2Str,
-                    safe(fila.getCantidadBarcosBahia()),
+                    fila.getCantidadBarcosBahia(),
                     safe(fila.getMuelle1Estado()),
-                    safe(fila.getMuelle1InicioOcupado()),
+                    fila.getMuelle1InicioOcupado(),
                     safe(fila.getMuelle2Estado()),
-                    safe(fila.getMuelle2InicioOcupado()),
+                    fila.getMuelle2InicioOcupado(),
                     safe(fila.getGrua1Estado()),
-                    safe(fila.getGrua1InicioOcupado()),
+                    fila.getGrua1InicioOcupado(),
                     safe(fila.getGrua2Estado()),
-                    safe(fila.getGrua2InicioOcupado()),
-                    safe(fila.getMaxTiempoPermanencia()),
-                    safe(fila.getMinTiempoPermanencia()),
-                    safe(fila.getAcumuladorTiempoEsperaBahia()),
-                    safe(fila.getContadorBarcosAtendidos()),
-                    safe(fila.getMediaTiempoPermanencia()),
-                    safe(fila.getMuelle1AcTiempoOcupado()),
-                    safe(fila.getMuelle1Utilizacion()),
-                    safe(fila.getMuelle2AcTiempoOcupado()),
-                    safe(fila.getMuelle2Utilizacion()),
-                    safe(fila.getGrua1AcTiempoOcupado()),
-                    safe(fila.getGrua1Utilizacion()),
-                    safe(fila.getGrua2AcTiempoOcupado()),
-                    safe(fila.getGrua2Utilizacion()),
-                    safe(fila.getCantBarcosEnSistema()),
-                    // Placeholder slots
-                    0, "", "", // B_Slot1: ID, Estado, T_Ingreso
-                    0, "", ""   // B_Slot2: ID, Estado, T_Ingreso
+                    fila.getGrua2InicioOcupado(),
+                    fila.getMaxTiempoPermanencia(),
+                    fila.getMinTiempoPermanencia(),
+                    fila.getAcumuladorTiempoEsperaBahia(),
+                    fila.getContadorBarcosQueEsperanEnBahia(), // Usar el contador correcto para la media
+                    fila.getMediaTiempoPermanencia(),
+                    fila.getMuelle1AcTiempoOcupado(),
+                    fila.getMuelle1Utilizacion(),
+                    fila.getMuelle2AcTiempoOcupado(),
+                    fila.getMuelle2Utilizacion(),
+                    fila.getGrua1AcTiempoOcupado(),
+                    fila.getGrua1Utilizacion(),
+                    fila.getGrua2AcTiempoOcupado(),
+                    fila.getGrua2Utilizacion(),
+                    fila.getCantBarcosEnSistema(),
+                    // Datos de los barcos, ahora seguros
+                    b1_id,
+                    b1_estado,
+                    b1_t_ingreso,
+                    b2_id,
+                    b2_estado,
+                    b2_t_ingreso
             );
         }
     }
 
     // Método auxiliar para manejar nulls de forma segura
-    private static Object safe(Object obj) {
-        if (obj == null) {
-            return 0.0; // Para doubles
-        }
-        return obj;
-    }
-
     private static int safe(Integer i) {
         return i != null ? i : 0;
     }

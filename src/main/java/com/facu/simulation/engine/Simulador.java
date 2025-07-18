@@ -242,16 +242,18 @@ public class Simulador {
         // 2. Buscar muelle libre
         Muelle muelleLibre = buscarMuelleLibre();
 
+        barco.setTiempoLlegadaSistema(reloj);
+
         // 3. Decidir el camino del barco
         if (muelleLibre != null) {
             // HAY MUELLE LIBRE
 
             // NUEVA LÓGICA: Generar RND específico según qué muelle se asigne
+            barco.setEstado(EstadoBarco.SIENDO_DESCARGADO);
             double rndDescarga = generador.generarNumeroAleatorio();
             double tiempoDescargaBase = generador.convertirAUniforme(rndDescarga,
                     configuracion.getTiempoDescargaMin(), configuracion.getTiempoDescargaMax());
             barco.setTiempoDescargaRestante(tiempoDescargaBase);
-            barco.setTiempoLlegadaSistema(reloj);
 
             // Ocupar el muelle
             muelleLibre.ocuparMuelle(barco, reloj);
@@ -280,10 +282,11 @@ public class Simulador {
             // NO HAY MUELLE LIBRE
             // Agregar el barco a la bahía
             barco.setEstado(EstadoBarco.EN_BAHIA);
-            barco.setTiempoLlegadaSistema(reloj);
+            barco.setHoraLlegadaBahia(reloj);
             this.bahia.add(barco);
         }
 
+        reasignarGruasYRecalcularTiempos();
         // 4. ACTUALIZAR ESTADO ACTUAL DEL SISTEMA EN LA FILA VECTOR
         actualizarEstadoSistemaEnFilaVector();
     }
@@ -292,12 +295,12 @@ public class Simulador {
      * Procesa el fin de descarga de un barco.
      * Este método será llamado por el evento FinDescarga.
      */
-    public void procesarFinDescarga(Barco barco) {
+    public void procesarFinDescarga(Barco barcoTerminado) {
         // 1. Liberar recursos: eliminar barco del muelle
         Muelle muelleOcupado = null;
         for (Muelle muelle : muelles) {
             if (muelle.getBarcoAtendido() != null &&
-                    muelle.getBarcoAtendido().getId() == barco.getId()) {
+                    muelle.getBarcoAtendido().getId() == barcoTerminado.getId()) {
                 muelleOcupado = muelle;
                 break;
             }
@@ -307,26 +310,34 @@ public class Simulador {
             muelleOcupado.liberarMuelle(this.reloj);
         }
 
-        // 2. Actualizar estadísticas
         contadorBarcosAtendidos++;
-        double tiempoEspera = reloj - barco.getTiempoLlegadaSistema();
-        this.acumuladorTiempoEsperaBahia += tiempoEspera;
-
-        // Actualizar estadísticas min/max
-        if (this.actualFilaVector.getMinTiempoPermanencia() == 0.0 || 
-            tiempoEspera < this.actualFilaVector.getMinTiempoPermanencia()) {
-            this.actualFilaVector.setMinTiempoPermanencia(tiempoEspera);
-        }
-        if (tiempoEspera > this.actualFilaVector.getMaxTiempoPermanencia()) {
-            this.actualFilaVector.setMaxTiempoPermanencia(tiempoEspera);
-        }
-
-
-
-        // 3. Atender la cola (Bahía)
+        // 2. Atender la cola (Bahía)
         if (!bahia.isEmpty() && muelleOcupado != null) {
-            // Hay barcos esperando y hay un muelle libre
+            //
             Barco barcoEsperando = bahia.poll();
+            // 3. Actualizar estadísticas
+            double tiempoEnBahia = reloj - barcoEsperando.getHoraLlegadaBahia();
+
+            // Se actualizan los acumuladores en la fila actual, leyendo desde la anterior.
+            actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia() + tiempoEnBahia);
+
+            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia() + 1);
+            // Actualizar min/max leyendo el histórico desde la última fila
+            double minHistorico = ultimaFilaVector.getMinTiempoPermanencia();
+            if (minHistorico == 0.0 || tiempoEnBahia < minHistorico) {
+                actualFilaVector.setMinTiempoPermanencia(tiempoEnBahia);
+            } else {
+                actualFilaVector.setMinTiempoPermanencia(minHistorico);
+            }
+
+            if (tiempoEnBahia > ultimaFilaVector.getMaxTiempoPermanencia()) {
+                actualFilaVector.setMaxTiempoPermanencia(tiempoEnBahia);
+            } else {
+                actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
+            }
+
+            // Hay barcos esperando y hay un muelle libre
+
             barcoEsperando.setEstado(EstadoBarco.SIENDO_DESCARGADO);
 
             // Generar RND específico según qué muelle se libera
@@ -362,117 +373,149 @@ public class Simulador {
         actualizarEstadoSistemaEnFilaVector();
     }
 
-    // ==================== EL CORAZÓN DE LA LÓGICA ====================
-
-    /**
-     * Reasigna las grúas y recalcula los tiempos de finalización de todos los barcos en servicio.
-     * Este es el método más importante de la simulación.
-     */
-    private void reasignarGruasYRecalcularTiempos() {
-        // 1. Limpiar eventos de FinDescarga existentes para barcos en servicio
-        fel.removeIf(evento -> evento instanceof FinDescarga);
-
-        // 2. Liberar todas las grúas
-        for (Grua grua : gruas) {
-            if (grua.estaOcupada()) {
-                grua.liberar(reloj);
-            }
-        }
-
-        // 3. Contar barcos en servicio (muelles ocupados)
-        List<Barco> barcosEnServicio = new ArrayList<>();
-        for (Muelle muelle : muelles) {
-            if (muelle.estaOcupado() && muelle.getBarcoAtendido() != null) {
-                barcosEnServicio.add(muelle.getBarcoAtendido());
-            }
-        }
-
-        int cantidadBarcosEnServicio = barcosEnServicio.size();
-
-        // 4. Aplicar reglas según la cantidad de barcos en servicio
-        if (cantidadBarcosEnServicio == 1) {
-            // UN BARCO EN SERVICIO: Asignar las 2 grúas
-            Barco barco = barcosEnServicio.get(0);
-
-            // Asignar 2 grúas al barco
-            asignarGruasABarco(barco, this.gruas.size());
-
-            // Recalcular tiempo: con 2 grúas, el tiempo se divide por 2
-            double tiempoTranscurrido = reloj - this.ultimaFilaVector.getTiempo();
-            double tiempoRestanteActualizado = barco.getTiempoDescargaRestante() - tiempoTranscurrido;
-            double tiempoRecalculado = tiempoRestanteActualizado / 2.0; // Con 2 grúas es la mitad
-            double tiempoFinDescarga = reloj + tiempoRecalculado;
-            
-            // Actualizar el tiempo de descarga restante del barco
-            barco.setTiempoDescargaRestante(tiempoRecalculado);
-            
-            // Programar nuevo FinDescarga
-            fel.add(new FinDescarga(tiempoFinDescarga, barco));
-
-            // Actualizar tiempos en FilaVector según qué muelle está ocupado
-            for (Muelle muelle : muelles) {
-                if (muelle.estaOcupado() && muelle.getBarcoAtendido() == barco) {
-                    if (muelle.getId() == 1) {
-                        this.actualFilaVector.setFinDescarga1(tiempoFinDescarga);
-                        this.actualFilaVector.setTiempoRestanteMuelle1(tiempoRecalculado);
-                    } else if (muelle.getId() == 2) {
-                        this.actualFilaVector.setFinDescarga2(tiempoFinDescarga);
-                        this.actualFilaVector.setTiempoRestanteMuelle2(tiempoRecalculado);
-                    }
-                }
-            }
-
-        } else if (cantidadBarcosEnServicio == 2) {
-            // DOS BARCOS EN SERVICIO: Asignar 1 grúa a cada uno
-            for (int i = 0; i < barcosEnServicio.size(); i++) {
-                Barco barco = barcosEnServicio.get(i);
-                
-                // Asignar 1 grúa al barco
-                asignarGruasABarco(barco, 1);
-
-                // Recalcular tiempo: con 1 grúa, usar el tiempo base
-                double tiempoTranscurrido = reloj - this.ultimaFilaVector.getTiempo();
-                double tiempoRestanteActualizado = barco.getTiempoDescargaRestante() - tiempoTranscurrido;
-                double tiempoFinDescarga = reloj + tiempoRestanteActualizado;
-
-                // Actualizar el tiempo de descarga restante del barco
-                barco.setTiempoDescargaRestante(tiempoRestanteActualizado);
-                
-                // Programar nuevo FinDescarga
-                fel.add(new FinDescarga(tiempoFinDescarga, barco));
-
-                // Actualizar tiempos en FilaVector según qué muelle está ocupado
-                for (Muelle muelle : muelles) {
-                    if (muelle.estaOcupado() && muelle.getBarcoAtendido() == barco) {
-                        if (muelle.getId() == 1) {
-                            this.actualFilaVector.setFinDescarga1(tiempoFinDescarga);
-                            this.actualFilaVector.setTiempoRestanteMuelle1(tiempoRestanteActualizado);
-                        } else if (muelle.getId() == 2) {
-                            this.actualFilaVector.setFinDescarga2(tiempoFinDescarga);
-                            this.actualFilaVector.setTiempoRestanteMuelle2(tiempoRestanteActualizado);
-                        }
-                    }
-                }
-            }
-        }
-        // Si cantidadBarcosEnServicio == 0, no hay nada que hacer
-    }
-
-
-    /**
-     * Asigna una cantidad específica de grúas a un barco.
-     */
     private void asignarGruasABarco(Barco barco, int cantidadGruas) {
+        Muelle muelleDelBarco = buscarMuellePorBarco(barco);
+        if (muelleDelBarco == null) return;
+
         int gruasAsignadas = 0;
         for (Grua grua : gruas) {
             if (grua.estaLibre() && gruasAsignadas < cantidadGruas) {
                 grua.setEstado(EstadoGrua.OCUPADA);
                 grua.setBarcoAsignado(barco);
-                grua.setTiempoInicioOcupado(reloj); // ¡ESTO FALTABA!
+                muelleDelBarco.asignarGrua(); // <<<--- ESTO FALTABA
                 gruasAsignadas++;
             }
         }
     }
+    private void actualizarEstadisticasBarcos() {
+        // El contador de barcos atendidos se actualiza aquí para todos los casos
+        actualFilaVector.setContadorBarcosAtendidos(ultimaFilaVector.getContadorBarcosAtendidos());
+        if (actualFilaVector.getEvento().equals("FinDescarga")) {
+            actualFilaVector.setContadorBarcosAtendidos(actualFilaVector.getContadorBarcosAtendidos() + 1);
+        }
+
+        // Se copian las estadísticas de la fila anterior por si no hay cambios en este evento
+        if (!actualFilaVector.getEvento().equals("FinDescarga") || bahia.isEmpty()) {
+            actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
+            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia());
+            actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
+            actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
+        }
+
+        // Calcular media de tiempo de permanencia en bahía
+        if (actualFilaVector.getContadorBarcosQueEsperanEnBahia() > 0) {
+            double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperanEnBahia();
+            actualFilaVector.setMediaTiempoPermanencia(media);
+        }
+    }
+
+    // Función auxiliar que faltaba
+    private Muelle buscarMuellePorBarco(Barco barco) {
+        for (Muelle muelle : muelles) {
+            if (muelle.getBarcoAtendido() != null && muelle.getBarcoAtendido().getId() == barco.getId()) {
+                return muelle;
+            }
+        }
+        return null;
+    }
+    // ==================== EL CORAZÓN DE LA LÓGICA ====================
+
+    /**
+     * Reasigna las grúas y recalcula los tiempos de finalización de todos los barcos en servicio.
+     * Esta es la versión corregida y final.
+     */
+    private void reasignarGruasYRecalcularTiempos() {
+        // 1. ACTUALIZAR TRABAJO REALIZADO DESDE EL ÚLTIMO EVENTO
+        double tiempoTranscurrido = reloj - this.ultimaFilaVector.getTiempo();
+        if (tiempoTranscurrido > 0) {
+            // Usamos el estado guardado en la última fila para saber cómo estaba el sistema
+            if (ultimaFilaVector.getMuelle1Estado() == EstadoMuelle.OCUPADO) {
+                Muelle muelle1 = this.muelles.stream()
+                        .filter(m -> m.getId() == 1)
+                        .findFirst()
+                        .orElse(null);
+                if (muelle1.getBarcoAtendido() != null) {
+                    int gruasPrevias = ultimaFilaVector.getMuelle1GruasAsignadas();
+                    double trabajoRealizado = tiempoTranscurrido * gruasPrevias;
+                    muelle1.getBarcoAtendido().reducirTiempoDescarga(trabajoRealizado);
+                }
+            }
+            if (ultimaFilaVector.getMuelle2Estado() == EstadoMuelle.OCUPADO) {
+                Muelle muelle2 = this.muelles.stream()
+                        .filter(m -> m.getId() == 2)
+                        .findFirst()
+                        .orElse(null);
+                if (muelle2.getBarcoAtendido() != null) {
+                    int gruasPrevias = ultimaFilaVector.getMuelle2GruasAsignadas();
+                    double trabajoRealizado = tiempoTranscurrido * gruasPrevias;
+                    muelle2.getBarcoAtendido().reducirTiempoDescarga(trabajoRealizado);
+                }
+            }
+        }
+
+        // 2. LIMPIAR ESTADO ANTERIOR: Quitar eventos FinDescarga y liberar grúas
+        fel.removeIf(evento -> evento instanceof FinDescarga);
+        List<Barco> barcosEnServicio = new ArrayList<>();
+        for (Grua grua : gruas) { grua.liberar(reloj); }
+        for (Muelle muelle: muelles) { 
+            muelle.setGruasAsignadas(0); 
+            if (muelle.estaOcupado()){
+                Barco barco = muelle.getBarcoAtendido();
+                barcosEnServicio.add(barco);
+            }
+        } // Resetear contador
+        
+        // 3. REASIGNAR GRÚAS Y PROGRAMAR NUEVOS EVENTOS
+        
+
+        if (barcosEnServicio.size() == 1) {
+            Barco barco = barcosEnServicio.get(0);
+            asignarGruasABarco(barco, 2); // Asignar 2 grúas
+
+            // El tiempo restante se divide por la nueva velocidad (2 grúas)
+            double tiempoFinalRecalculado = barco.getTiempoDescargaRestante() / 2.0;
+            double tiempoFinDescarga = reloj + tiempoFinalRecalculado;
+
+            fel.add(new FinDescarga(tiempoFinDescarga, barco));
+            actualizarVectorConTiemposDeDescarga(barco, tiempoFinDescarga, tiempoFinalRecalculado);
+
+        } else if (barcosEnServicio.size() == 2) {
+            for (Barco barco : barcosEnServicio) {
+                asignarGruasABarco(barco, 1); // Asignar 1 grúa
+
+                // El tiempo restante es el base (velocidad de 1 grúa)
+                double tiempoFinalRecalculado = barco.getTiempoDescargaRestante();
+                double tiempoFinDescarga = reloj + tiempoFinalRecalculado;
+
+                fel.add(new FinDescarga(tiempoFinDescarga, barco));
+                actualizarVectorConTiemposDeDescarga(barco, tiempoFinDescarga, tiempoFinalRecalculado);
+            }
+        }
+
+        // Guardar el número de grúas asignadas en la fila actual para el próximo cálculo
+        for(Muelle muelle : muelles) {
+            if (muelle.getId() == 1) actualFilaVector.setMuelle1GruasAsignadas(muelle.getGruasAsignadas());
+            if (muelle.getId() == 2) actualFilaVector.setMuelle2GruasAsignadas(muelle.getGruasAsignadas());
+        }
+    }
+
+    // Método auxiliar para no repetir código
+    private void actualizarVectorConTiemposDeDescarga(Barco barco, double finDescarga, double tiempoRestante) {
+        for (Muelle muelle : muelles) {
+            if (muelle.getBarcoAtendido() == barco) {
+                if (muelle.getId() == 1) {
+                    actualFilaVector.setFinDescarga1(finDescarga);
+                    actualFilaVector.setTiempoRestanteMuelle1(tiempoRestante);
+                } else if (muelle.getId() == 2) {
+                    actualFilaVector.setFinDescarga2(finDescarga);
+                    actualFilaVector.setTiempoRestanteMuelle2(tiempoRestante);
+                }
+                break;
+            }
+        }
+    }
+
+
 
     /**
      * Actualiza todos los campos del FilaVector actual con el estado actual del sistema.
@@ -616,17 +659,7 @@ public class Simulador {
         }
     }
 
-    /**
-     * Actualiza las estadísticas relacionadas con los barcos.
-     */
-    private void actualizarEstadisticasBarcos() {
-        // Calcular media de tiempo de permanencia si hay barcos atendidos
-        if (this.actualFilaVector.getContadorBarcosAtendidos() > 0) {
-            double media = this.actualFilaVector.getAcumuladorTiempoEsperaBahia() / 
-                          this.actualFilaVector.getContadorBarcosAtendidos();
-            this.actualFilaVector.setMediaTiempoPermanencia(media);
-        }
-    }
+
 
     /**
      * Actualiza los porcentajes de utilización de recursos.

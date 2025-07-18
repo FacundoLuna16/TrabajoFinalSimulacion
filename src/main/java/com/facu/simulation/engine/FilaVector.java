@@ -30,8 +30,10 @@ public class FilaVector {
     private int cantidadBarcosBahia;
     // Muelle
     private EstadoMuelle muelle1Estado;
+    private int muelle1GruasAsignadas;
     private double muelle1InicioOcupado;
     private EstadoMuelle muelle2Estado;
+    private int muelle2GruasAsignadas;
     private double muelle2InicioOcupado;
     // Grúas
     private EstadoGrua grua1Estado;
@@ -58,6 +60,9 @@ public class FilaVector {
     private int cantBarcosEnSistema;
     private int cantMaxBarcosEnSistema;
     private List<Barco> barcosEnSistema; // Lista de barcos en el sistema
+
+    //otros
+    private int contadorBarcosQueEsperanEnBahia;
 
 
     public FilaVector(int numeroFila, double tiempo, String evento) {

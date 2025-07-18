@@ -8,26 +8,27 @@ import lombok.NoArgsConstructor;
 public class Barco {
     private int id;
     private EstadoBarco estado;
-    private double tiempoLlegadaSistema;
+    private double horaLlegadaBahia;
     private double tiempoDescargaRestante;
+    private double tiempoLlegadaSistema;
     
-    public Barco(int id, double horaLlegada, double tiempoDescarga) {
+    public Barco(int id, double horaLlegadaBahia, double tiempoDescarga) {
         this.id = id;
-        this.tiempoLlegadaSistema = horaLlegada;
+        this.horaLlegadaBahia = horaLlegadaBahia;
         this.tiempoDescargaRestante = tiempoDescarga;
         this.estado = EstadoBarco.EN_BAHIA;
     }
 
-    public Barco (int id, double horaLlegada) {
+    public Barco (int id, double horaLlegadaBahia) {
         this.id = id;
-        this.tiempoLlegadaSistema = horaLlegada;
+        this.horaLlegadaBahia = horaLlegadaBahia;
         this.tiempoDescargaRestante = 0; // Por defecto, sin tiempo de descarga
         this.estado = null; // Estado no definido
 
     }
 
     public double getHoraLlegadaSistema() {
-        return tiempoLlegadaSistema;
+        return horaLlegadaBahia;
     }
 
     public void reducirTiempoDescarga(double tiempoTrabajado) {

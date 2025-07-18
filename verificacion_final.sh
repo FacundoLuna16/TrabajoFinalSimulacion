@@ -1,4 +1,68 @@
-/com/facu/simulation/dto/FilaVectorDTO.java; then
+#!/bin/bash
+
+echo "🎯 VERIFICACIÓN FINAL DE INTEGRACIÓN UI"
+echo "======================================"
+
+cd /home/facu/proyectos/TrabajoTpSim
+
+echo ""
+echo "📦 1. VERIFICANDO COMPILACIÓN..."
+mvn clean compile -q
+
+if [ $? -eq 0 ]; then
+    echo "   ✅ Compilación exitosa - Sin errores"
+else
+    echo "   ❌ Error en compilación"
+    exit 1
+fi
+
+echo ""
+echo "📋 2. VERIFICANDO ARCHIVOS PRINCIPALES..."
+
+# Verificar archivos clave de la integración
+archivos=(
+    "src/main/java/com/facu/simulation/dto/ResultadosSimulacionDTO.java"
+    "src/main/java/com/facu/simulation/dto/FilaVectorDTO.java"
+    "src/main/java/com/facu/simulation/dto/BarcoSlotDTO.java"
+    "src/main/java/com/facu/simulation/engine/ConvertidorDatosUI.java"
+    "src/main/java/com/facu/simulation/ui/GeneradorColumnasTabla.java"
+    "src/main/java/com/facu/simulation/ui/VentanaPrincipal.java"
+    "src/main/java/com/facu/simulation/engine/Simulador.java"
+)
+
+for archivo in "${archivos[@]}"; do
+    if [ -f "$archivo" ]; then
+        echo "   ✅ $archivo"
+    else
+        echo "   ❌ $archivo - FALTANTE"
+    fi
+done
+
+echo ""
+echo "🔧 3. VERIFICANDO FUNCIONALIDADES IMPLEMENTADAS..."
+
+# Verificar que los métodos clave existen
+echo "   📋 Buscando métodos de integración..."
+
+if grep -q "convertirAResultadosDTO" src/main/java/com/facu/simulation/engine/ConvertidorDatosUI.java; then
+    echo "   ✅ ConvertidorDatosUI.convertirAResultadosDTO() - Implementado"
+else
+    echo "   ❌ ConvertidorDatosUI.convertirAResultadosDTO() - FALTANTE"
+fi
+
+if grep -q "generarEncabezados" src/main/java/com/facu/simulation/ui/GeneradorColumnasTabla.java; then
+    echo "   ✅ GeneradorColumnasTabla.generarEncabezados() - Implementado"
+else
+    echo "   ❌ GeneradorColumnasTabla.generarEncabezados() - FALTANTE"
+fi
+
+if grep -q "maxBarcosEnSistema" src/main/java/com/facu/simulation/dto/ResultadosSimulacionDTO.java; then
+    echo "   ✅ ResultadosSimulacionDTO.maxBarcosEnSistema - Campo agregado"
+else
+    echo "   ❌ ResultadosSimulacionDTO.maxBarcosEnSistema - FALTANTE"
+fi
+
+if grep -q "barcosEnSistema" src/main/java/com/facu/simulation/dto/FilaVectorDTO.java; then
     echo "   ✅ FilaVectorDTO.barcosEnSistema - Campo agregado"
 else
     echo "   ❌ FilaVectorDTO.barcosEnSistema - FALTANTE"
