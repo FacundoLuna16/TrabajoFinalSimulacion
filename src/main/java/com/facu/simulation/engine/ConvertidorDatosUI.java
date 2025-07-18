@@ -106,36 +106,45 @@ public class ConvertidorDatosUI {
         dto.setNumeroFila(fila.getNumeroFila());
         dto.setEvento(fila.getEvento());
         dto.setTiempo(fila.getTiempo());
+
         dto.setRndLlegada(fila.getRndLlegada());
         dto.setProximaLlegada(fila.getProximaLlegada());
+
         dto.setRndDescargaMuelle1(fila.getRndDescargaMuelle1());
         dto.setTiempoRestanteMuelle1(fila.getTiempoRestanteMuelle1()); // NUEVO
         dto.setFinDescarga1(fila.getFinDescarga1());
         dto.setRndDescargaMuelle2(fila.getRndDescargaMuelle2());
         dto.setTiempoRestanteMuelle2(fila.getTiempoRestanteMuelle2()); // NUEVO
         dto.setFinDescarga2(fila.getFinDescarga2());
+
         dto.setCantidadBarcosBahia(fila.getCantidadBarcosBahia());
+
         dto.setMuelle1Estado(safeString(fila.getMuelle1Estado()));
         dto.setMuelle1InicioOcupado(fila.getMuelle1InicioOcupado());
         dto.setMuelle2Estado(safeString(fila.getMuelle2Estado()));
         dto.setMuelle2InicioOcupado(fila.getMuelle2InicioOcupado());
+
         dto.setGrua1Estado(safeString(fila.getGrua1Estado()));
         dto.setGrua1InicioOcupado(fila.getGrua1InicioOcupado());
         dto.setGrua2Estado(safeString(fila.getGrua2Estado()));
         dto.setGrua2InicioOcupado(fila.getGrua2InicioOcupado());
+
         dto.setMaxTiempoPermanencia(fila.getMaxTiempoPermanencia());
         dto.setMinTiempoPermanencia(fila.getMinTiempoPermanencia());
         dto.setAcumuladorTiempoEsperaBahia(fila.getAcumuladorTiempoEsperaBahia());
         dto.setContadorBarcosAtendidos(fila.getContadorBarcosAtendidos());
         dto.setMediaTiempoPermanencia(fila.getMediaTiempoPermanencia());
+
         dto.setMuelle1AcTiempoOcupado(fila.getMuelle1AcTiempoOcupado());
         dto.setMuelle1Utilizacion(fila.getMuelle1Utilizacion());
         dto.setMuelle2AcTiempoOcupado(fila.getMuelle2AcTiempoOcupado());
         dto.setMuelle2Utilizacion(fila.getMuelle2Utilizacion());
+
         dto.setGrua1AcTiempoOcupado(fila.getGrua1AcTiempoOcupado());
         dto.setGrua1Utilizacion(fila.getGrua1Utilizacion());
         dto.setGrua2AcTiempoOcupado(fila.getGrua2AcTiempoOcupado());
         dto.setGrua2Utilizacion(fila.getGrua2Utilizacion());
+
         dto.setCantBarcosEnSistema(fila.getCantBarcosEnSistema());
 
         return dto;
