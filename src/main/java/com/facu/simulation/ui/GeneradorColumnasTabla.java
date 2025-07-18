@@ -83,11 +83,11 @@ public class GeneradorColumnasTabla {
         datos.add(formatearTiempo(fila.getGrua1InicioOcupado())); // "G1Inic"
         datos.add(fila.getGrua2Estado());                  // "G2Est"
         datos.add(formatearTiempo(fila.getGrua2InicioOcupado())); // "G2Inic"
-        datos.add(formatearTiempo(fila.getMaxTiempoPermanencia())); // "MaxTPer"
-        datos.add(formatearTiempo(fila.getMinTiempoPermanencia())); // "MinTPer"
-        datos.add(formatearTiempo(fila.getAcumuladorTiempoEsperaBahia())); // "AcTPer"
+        datos.add(String.format("%.2f", fila.getMaxTiempoPermanencia())); // "MaxTPer" - Sin formateo especial
+        datos.add(String.format("%.2f", fila.getMinTiempoPermanencia())); // "MinTPer" - Sin formateo especial
+        datos.add(String.format("%.2f", fila.getAcumuladorTiempoEsperaBahia())); // "AcTPer" - Sin formateo especial
         datos.add(fila.getContadorBarcosQueEsperaronEnBahia());       // "CantB" - Ahora cuenta barcos que esperaron en bahía
-        datos.add(formatearTiempo(fila.getMediaTiempoPermanencia())); // "MedTPer"
+        datos.add(String.format("%.2f", fila.getMediaTiempoPermanencia())); // "MedTPer" - Sin formateo especial
         datos.add(formatearTiempo(fila.getMuelle1AcTiempoOcupado())); // "M1AcTOc"
         datos.add(String.format("%.2f", fila.getMuelle1Utilizacion())); // "M1Ut%"
         datos.add(formatearTiempo(fila.getMuelle2AcTiempoOcupado())); // "M2AcTOc"

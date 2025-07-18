@@ -11,6 +11,7 @@ public class Barco {
     private double horaLlegadaBahia;
     private double tiempoDescargaRestante;
     private double tiempoLlegadaSistema;
+    private double tiempoInicioDescarga;
     
     public Barco(int id, double horaLlegadaBahia, double tiempoDescarga) {
         this.id = id;

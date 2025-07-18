@@ -62,7 +62,7 @@ public class FilaVector {
     private List<Barco> barcosEnSistema; // Lista de barcos en el sistema
 
     //otros
-    private int contadorBarcosQueEsperanEnBahia;
+    private int contadorBarcosQueEsperonEnBahia;
 
 
     public FilaVector(int numeroFila, double tiempo, String evento) {

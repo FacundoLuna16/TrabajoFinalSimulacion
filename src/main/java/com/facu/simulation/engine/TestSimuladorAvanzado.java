@@ -1,6 +1,5 @@
 package com.facu.simulation.engine;
 
-import com.facu.simulation.dto.ResultadosSimulacionDTO;
 import com.facu.simulation.model.Barco;
 import com.facu.simulation.model.EstadoBarco;
 import com.facu.simulation.model.EstadoMuelle;
@@ -14,11 +13,11 @@ public class TestSimuladorAvanzado {
         // --- CONFIGURACIÓN PARA PROBAR RND SEPARADOS: Más llegadas para ver ambos muelles ---
         ConfiguracionSimulacion config = new ConfiguracionSimulacion(
             0.8,   // Media entre llegadas: 0.8 días (MÁS BARCOS para forzar uso de ambos muelles)
-            0.5,   // Tiempo mínimo de descarga: 0.5 días
-            1.5,   // Tiempo máximo de descarga: 1.5 días
+            4,   // Tiempo mínimo de descarga: 0.5 días
+            6,   // Tiempo máximo de descarga: 1.5 días
             2,     // Cantidad de muelles: 2
             2,     // Cantidad de grúas: 2
-            10,    // Días de simulación: 10 días
+            20,    // Días de simulación: 10 días
             0,    // Mostrar desde fila 25 (cuando ya hay más actividad)
             10,    // Hasta fila 35
             true   // Filtro por fila
@@ -131,7 +130,7 @@ public class TestSimuladorAvanzado {
                     fila.getMaxTiempoPermanencia(),
                     fila.getMinTiempoPermanencia(),
                     fila.getAcumuladorTiempoEsperaBahia(),
-                    fila.getContadorBarcosQueEsperanEnBahia(),
+                    fila.getContadorBarcosQueEsperonEnBahia(),
                     fila.getMediaTiempoPermanencia(),
                     fila.getMuelle1AcTiempoOcupado(),
                     fila.getMuelle1Utilizacion(),

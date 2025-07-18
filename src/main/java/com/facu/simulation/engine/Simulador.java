@@ -5,7 +5,6 @@ import com.facu.simulation.events.LlegadaBarco;
 import com.facu.simulation.events.FinDescarga;
 import com.facu.simulation.model.*;
 import com.facu.simulation.generator.GeneradorAleatorio;
-import com.facu.simulation.dto.FilaVectorDTO;
 import com.facu.simulation.dto.ResultadosSimulacionDTO;
 import lombok.Data;
 
@@ -211,7 +210,7 @@ public class Simulador {
         fila.setGrua2Estado(EstadoGrua.LIBRE);
         // Estadísticas
         fila.setMaxTiempoPermanencia(0.0); // 0.0
-        //DEJAMOS EN NULL O EMPTY MIN PARA PREGUNTAR SI ES NULO PONEMOS EL PRIMER VALOR Y LISTO
+        fila.setMinTiempoPermanencia(0.0); // 0.0
         fila.setAcumuladorTiempoEsperaBahia(0);
         fila.setContadorBarcosAtendidos(0);
 
@@ -254,11 +253,11 @@ public class Simulador {
             actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
             actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
             actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
-            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia());
+            actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia());
             
             // Recalcular media con los datos actuales
-            if (actualFilaVector.getContadorBarcosQueEsperanEnBahia() > 0) {
-                double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperanEnBahia();
+            if (actualFilaVector.getContadorBarcosQueEsperonEnBahia() > 0) {
+                double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperonEnBahia();
                 actualFilaVector.setMediaTiempoPermanencia(media);
             } else {
                 actualFilaVector.setMediaTiempoPermanencia(0.0);
@@ -353,15 +352,13 @@ public class Simulador {
         this.actualFilaVector.setProximaLlegada(this.ultimaFilaVector.getProximaLlegada());
         // 2. Atender la cola (Bahía)
         if (!bahia.isEmpty() && muelleOcupado != null) {
-            //
             Barco barcoEsperando = bahia.poll();
             // 3. Actualizar estadísticas
             double tiempoEnBahia = reloj - barcoEsperando.getHoraLlegadaBahia();
 
             // Se actualizan los acumuladores en la fila actual, leyendo desde la anterior.
             actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia() + tiempoEnBahia);
-
-            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia() + 1);
+            actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia() + 1);
             // Actualizar min/max leyendo el histórico desde la última fila
             double minHistorico = ultimaFilaVector.getMinTiempoPermanencia();
             if (minHistorico == 0.0 || tiempoEnBahia < minHistorico) {
@@ -404,8 +401,24 @@ public class Simulador {
                 this.actualFilaVector.setFinDescarga2(tiempoDescargaBase + this.reloj);
                 this.actualFilaVector.setTiempoRestanteMuelle2(tiempoDescargaBase);
             }
-        }
+        }else {
+            // TODO ARMAR LA TABLA DE MAX MIN ACUMULADORES
+            // Copiar métricas de tiempo de permanencia desde ultimaFilaVector
+            if (ultimaFilaVector != null) {
+                actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
+                actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
+                actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
+                actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia());
 
+                // Recalcular media con los datos actuales
+                if (actualFilaVector.getContadorBarcosQueEsperonEnBahia() > 0) {
+                    double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperonEnBahia();
+                    actualFilaVector.setMediaTiempoPermanencia(media);
+                } else {
+                    actualFilaVector.setMediaTiempoPermanencia(0.0);
+                }
+            }
+        }
         // 4. Llamar a la lógica de reasignación
         reasignarGruasYRecalcularTiempos();
 
@@ -443,16 +456,16 @@ public class Simulador {
         }
 
         // Se copian las estadísticas de la fila anterior por si no hay cambios en este evento
-        if (!actualFilaVector.getEvento().equals("FinDescarga") || bahia.isEmpty()) {
+        if (!actualFilaVector.getEvento().equals("FinDescarga")) {
             actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
-            actualFilaVector.setContadorBarcosQueEsperanEnBahia(ultimaFilaVector.getContadorBarcosQueEsperanEnBahia());
+            actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia());
             actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
             actualFilaVector.setMaxTiempoPermanencia(ultimaFilaVector.getMaxTiempoPermanencia());
         }
 
         // Calcular media de tiempo de permanencia en bahía
-        if (actualFilaVector.getContadorBarcosQueEsperanEnBahia() > 0) {
-            double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperanEnBahia();
+        if (actualFilaVector.getContadorBarcosQueEsperonEnBahia() > 0) {
+            double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperonEnBahia();
             actualFilaVector.setMediaTiempoPermanencia(media);
         } else {
             actualFilaVector.setMediaTiempoPermanencia(0.0);
@@ -572,7 +585,7 @@ public class Simulador {
      */
     private void actualizarEstadoSistemaEnFilaVector() {
         // 1. Copiar datos de la última fila para mantener continuidad
-        if (this.ultimaFilaVector != null) {
+        if (this.ultimaFilaVector != null && this.actualFilaVector.getNumeroFila() == 1) {
             copiarDatosDeUltimaFila();
         }
 
@@ -612,8 +625,8 @@ public class Simulador {
         // 5. Actualizar acumuladores de tiempo ocupado
         actualizarAcumuladoresTiempo();
 
-        // 6. Actualizar estadísticas de barcos
-        actualizarEstadisticasBarcos();
+//        // 6. Actualizar estadísticas de barcos
+//        actualizarEstadisticasBarcos();
 
         // 7. Actualizar porcentajes de utilización
         actualizarPorcentajesUtilizacion();
