@@ -160,6 +160,7 @@ public class Simulador {
         if (!fel.isEmpty()) {
             Evento eventoFinal = fel.poll();
             reloj = eventoFinal.getTiempo();
+            this.actualFilaVector = new FilaVector(numeroFila, reloj, eventoFinal.getClass().getSimpleName());
             eventoFinal.procesar(this);
 
             // La última iteración SIEMPRE se muestra, independientemente del rango configurado
@@ -629,7 +630,13 @@ public class Simulador {
         actualizarAcumuladoresTiempo();
 
 //        // 6. Actualizar estadísticas de barcos
-//        actualizarEstadisticasBarcos();
+        // Calcular media de tiempo de permanencia en bahía
+        if (actualFilaVector.getContadorBarcosQueEsperonEnBahia() > 0) {
+            double media = actualFilaVector.getAcumuladorTiempoEsperaBahia() / actualFilaVector.getContadorBarcosQueEsperonEnBahia();
+            actualFilaVector.setMediaTiempoPermanencia(media);
+        } else {
+            actualFilaVector.setMediaTiempoPermanencia(0.0);
+        }
 
         // 7. Actualizar porcentajes de utilización
         actualizarPorcentajesUtilizacion();
