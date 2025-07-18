@@ -13,12 +13,14 @@ public class BarcoSlotDTO {
     private int id;
     private String estado; // "EB" (En Bahía) o "SD" (Siendo Descargado)
     private double tiempoIngreso; // Momento en que ingresó al sistema
+    private double tiempoInicioDescarga; // Momento en que comenzó la descarga
     private int slotAsignado; // Número de slot (1, 2, 3, etc.)
 
-    public BarcoSlotDTO(int id, String estado, double tiempoIngreso, int slotAsignado) {
+    public BarcoSlotDTO(int id, String estado, double tiempoIngreso, double tiempoInicioDescarga, int slotAsignado) {
         this.id = id;
         this.estado = estado;
         this.tiempoIngreso = tiempoIngreso;
+        this.tiempoInicioDescarga = tiempoInicioDescarga;
         this.slotAsignado = slotAsignado;
     }
 

@@ -210,6 +210,7 @@ public class ConvertidorDatosUI {
                         barco.getId(),
                         BarcoSlotDTO.mapearEstado(barco.getEstado()),
                         barco.getHoraLlegadaSistema(),
+                        barco.getTiempoInicioDescarga(),
                         slot
                     );
                     barcosSlot.add(barcoSlot);

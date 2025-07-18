@@ -50,7 +50,7 @@ public class GeneradorColumnasTabla {
         datos.addAll(extraerDatosBase(fila));
         
         // Agregar datos de slots
-        Object[] slotsData = generarDatosSlots(fila.getBarcosEnSistema(), maxBarcosEnSistema);
+        Object[] slotsData = generarDatosSlots(fila.getBarcosEnSistema(), maxBarcosEnSistema, fila.getTiempo());
         datos.addAll(Arrays.asList(slotsData));
         
         return datos.toArray();
@@ -104,7 +104,7 @@ public class GeneradorColumnasTabla {
     /**
      * Genera los datos de slots de barcos para la fila
      */
-    private Object[] generarDatosSlots(List<BarcoSlotDTO> barcosEnSistema, int maxSlots) {
+    private Object[] generarDatosSlots(List<BarcoSlotDTO> barcosEnSistema, int maxSlots, double tiempoFila) {
         Object[] datos = new Object[maxSlots * 3]; // 3 columnas por slot
         
         // Inicializar todos los slots como vacíos
@@ -118,8 +118,17 @@ public class GeneradorColumnasTabla {
                 int slot = barco.getSlotAsignado();
                 if (slot >= 1 && slot <= maxSlots) {
                     int indiceBase = (slot - 1) * 3; // 0-indexed
+                    
+                    // Calcular estado correcto basado en el tiempo
+                    String estadoCalculado;
+                    if (tiempoFila < barco.getTiempoInicioDescarga()) {
+                        estadoCalculado = "EB"; // En Bahía
+                    } else {
+                        estadoCalculado = "SD"; // Siendo Descargado
+                    }
+                    
                     datos[indiceBase] = barco.getId();
-                    datos[indiceBase + 1] = barco.getEstado();
+                    datos[indiceBase + 1] = estadoCalculado;
                     datos[indiceBase + 2] = String.format("%.2f", barco.getTiempoIngreso());
                 }
             }
