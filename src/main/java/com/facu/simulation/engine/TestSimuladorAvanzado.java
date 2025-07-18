@@ -37,20 +37,33 @@ public class TestSimuladorAvanzado {
     }
 
     private static void imprimirTablaSimulacion(List<FilaVector> vectores) {
-        // 1. Encabezado de la tabla - AHORA 100% CORRECTO
-        System.out.printf("%-5s | %-25s | %-10s | %-12s | %-12s | %-15s | %-15s | %-15s | %-15s | %-10s | " +
-                        "%-25s | %-20s | %-25s | %-20s | %-25s | %-20s | %-25s | %-20s | %-25s | %-25s | " +
-                        "%-30s | %-15s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | %-25s | " +
-                        "%-25s | %-20s | %-15s | %-25s | %-25s | %-15s | %-25s | %-25s%n",
-                "Fila", "Evento", "Reloj", "RND Llegada", "Prox Llegada",
-                "RND Descarga 1", "Fin Descarga 1", "RND Descarga 2", "Fin Descarga 2", "Bahia Cola",
-                "Muelle 1 Estado", "M1 Inicio Ocup.", "Muelle 2 Estado", "M2 Inicio Ocup.",
-                "Grua 1 Estado", "G1 Inicio Ocup.", "Grua 2 Estado", "G2 Inicio Ocup.",
-                "MAX T Perm.", "MIN T Perm.", "AC T Perm.", "AC Cant Barcos", "Media T Perm.",
-                "M1 AC T Ocupado", "M1 Util (%)", "M2 AC T Ocupado", "M2 Util (%)",
-                "G1 AC T Ocupado", "G1 Util (%)", "G2 AC T Ocupado", "G2 Util (%)",
-                "Barcos en Sistema", "B_Slot1_ID", "B_Slot1_Estado", "B_Slot1_T_Ingreso",
-                "B_Slot2_ID", "B_Slot2_Estado", "B_Slot2_T_Ingreso");
+        // Definir el ancho total de la tabla para permitir scroll horizontal
+        final int ANCHO_TOTAL = 250;
+        
+        // Imprimir separador y título
+        System.out.println("=".repeat(ANCHO_TOTAL));
+        System.out.println("TABLA DE SIMULACIÓN - EVENTOS DEL PUERTO");
+        System.out.println("=".repeat(ANCHO_TOTAL));
+        System.out.println("(Use scroll horizontal si es necesario para ver todas las columnas)");
+        System.out.println();
+        
+        // Encabezado completo en una sola línea con formato exacto que coincide con los datos
+        System.out.printf(
+                "%-4s|%-15s|%-6s|%-8s|%-8s|%-8s|%-10s|%-8s|%-10s|%-5s|" +
+                "%-8s|%-8s|%-8s|%-8s|%-8s|%-8s|%-8s|%-8s|" +
+                "%-8s|%-8s|%-8s|%-6s|%-8s|" +
+                "%-8s|%-6s|%-8s|%-6s|%-8s|%-6s|%-8s|%-6s|" +
+                "%-6s|%-6s|%-12s|%-8s|%-6s|%-12s|%-8s%n",
+                "Fila", "Evento", "Reloj", "RNDLleg", "ProxLleg", "RNDM1", "FinDescM1", "RNDM2", "FinDescM2", "Bahía",
+                "M1Est", "M1Inic", "M2Est", "M2Inic", "G1Est", "G1Inic", "G2Est", "G2Inic",
+                "MaxTPer", "MinTPer", "AcTPer", "CantB", "MedTPer",
+                "M1AcTOc", "M1Ut%", "M2AcTOc", "M2Ut%", "G1AcTOc", "G1Ut%", "G2AcTOc", "G2Ut%",
+                "BSist", "B1_ID", "B1_Estado", "B1_Ingr", "B2_ID", "B2_Estado", "B2_Ingr"
+        );
+        
+        // Línea separadora que coincide con el ancho de la tabla
+        System.out.println("-".repeat(ANCHO_TOTAL));
+
 
         // 2. Imprimir cada fila con manejo de datos seguro
         for (FilaVector fila : vectores) {
@@ -90,11 +103,13 @@ public class TestSimuladorAvanzado {
             String b2_estado = (barcoEnMuelle2 != null && barcoEnMuelle2.getEstado() != null) ? barcoEnMuelle2.getEstado().toString() : "";
             String b2_t_ingreso = (barcoEnMuelle2 != null) ? String.format("%.2f", barcoEnMuelle2.getTiempoLlegadaSistema()) : "";
 
-            // --- Llamada final a printf con todos los datos preparados y seguros ---
-            System.out.printf("%-5d | %-25s | %-10.2f | %-12s | %-12.2f | %-15s | %-15s | %-15s | %-15s | %-10d | " +
-                            "%-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25s | %-20.2f | %-25.4f | %-25.4f | " +
-                            "%-30.2f | %-15d | %-25.4f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | %-25.2f | " +
-                            "%-25.2f | %-20s | %-15d | %-25s | %-25s | %-15d | %-25s | %-25s%n",
+            // Imprimir datos con formato exactamente alineado al encabezado
+            System.out.printf(
+                    "%-4d|%-15s|%-6.2f|%-8s|%-8.2f|%-8s|%-10s|%-8s|%-10s|%-5d|" +
+                    "%-8s|%-8.2f|%-8s|%-8.2f|%-8s|%-8.2f|%-8s|%-8.2f|" +
+                    "%-8.3f|%-8.3f|%-8.2f|%-6d|%-8.3f|" +
+                    "%-8.2f|%-6.1f|%-8.2f|%-6.1f|%-8.2f|%-6.1f|%-8.2f|%-6.1f|" +
+                    "%-6d|%-6s|%-12s|%-8s|%-6s|%-12s|%-8s%n",
                     fila.getNumeroFila(),
                     fila.getEvento(),
                     fila.getTiempo(),
@@ -116,7 +131,7 @@ public class TestSimuladorAvanzado {
                     fila.getMaxTiempoPermanencia(),
                     fila.getMinTiempoPermanencia(),
                     fila.getAcumuladorTiempoEsperaBahia(),
-                    fila.getContadorBarcosQueEsperanEnBahia(), // Usar el contador correcto para la media
+                    fila.getContadorBarcosQueEsperanEnBahia(),
                     fila.getMediaTiempoPermanencia(),
                     fila.getMuelle1AcTiempoOcupado(),
                     fila.getMuelle1Utilizacion(),
@@ -127,11 +142,10 @@ public class TestSimuladorAvanzado {
                     fila.getGrua2AcTiempoOcupado(),
                     fila.getGrua2Utilizacion(),
                     fila.getCantBarcosEnSistema(),
-                    // Datos de los barcos, ahora seguros
-                    b1_id,
+                    (b1_id > 0) ? String.valueOf(b1_id) : "",
                     b1_estado,
                     b1_t_ingreso,
-                    b2_id,
+                    (b2_id > 0) ? String.valueOf(b2_id) : "",
                     b2_estado,
                     b2_t_ingreso
             );

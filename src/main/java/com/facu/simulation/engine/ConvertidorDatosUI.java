@@ -109,8 +109,10 @@ public class ConvertidorDatosUI {
         dto.setRndLlegada(fila.getRndLlegada());
         dto.setProximaLlegada(fila.getProximaLlegada());
         dto.setRndDescargaMuelle1(fila.getRndDescargaMuelle1());
+        dto.setTiempoRestanteMuelle1(fila.getTiempoRestanteMuelle1()); // NUEVO
         dto.setFinDescarga1(fila.getFinDescarga1());
         dto.setRndDescargaMuelle2(fila.getRndDescargaMuelle2());
+        dto.setTiempoRestanteMuelle2(fila.getTiempoRestanteMuelle2()); // NUEVO
         dto.setFinDescarga2(fila.getFinDescarga2());
         dto.setCantidadBarcosBahia(fila.getCantidadBarcosBahia());
         dto.setMuelle1Estado(safeString(fila.getMuelle1Estado()));

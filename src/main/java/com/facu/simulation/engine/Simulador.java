@@ -91,6 +91,7 @@ public class Simulador {
     private void programarPrimeraLlegada() {
         // Generar número aleatorio y tiempo
         double RndLlegada = generador.generarNumeroAleatorio();
+        this.ultimoRndLlegada = RndLlegada;
         // convertir en tiempo exponencial negativo
         double tiempoLlegada = generador.convertirAExponencial(RndLlegada, configuracion.getMediaLlegadas());
 
@@ -110,19 +111,20 @@ public class Simulador {
     public ResultadosSimulacionDTO run() {
         int numeroFila = 0;
         double tiempoMaximo = configuracion.getDiasSimulacion();
-        Optional<FilaVector> filaInicializacion;
+        
+        // SIEMPRE generar la fila de inicialización para evitar NullPointerException
+        FilaVector filaInicializacion = generarFilaInicializacion(numeroFila);
 
-        // Siempre se genera y evalúa la fila de inicialización
+        ultimaFilaVector = filaInicializacion; // Asegurar que ultimaFilaVector nunca sea null
+
+
+        
+        // Solo agregar a la lista si debe mostrarse
         if (debeMostrarFila(numeroFila)) {
-            filaInicializacion = Optional.of(generarFilaInicializacion(numeroFila));
-            vectoresEstado.add(filaInicializacion.get());
-        } else {
-            filaInicializacion = Optional.empty();
+            vectoresEstado.add(filaInicializacion);
         }
-        //Asignar la fila de inicialización a la última fila vector
-        filaInicializacion.ifPresent(fila -> ultimaFilaVector = fila);
+        
         numeroFila++;
-
 
         // Bucle principal
         while (true) {
@@ -144,7 +146,6 @@ public class Simulador {
 
             // Procesar el evento actual
             eventoActual.procesar(this);
-
 
             //Filtrar y generar fila de estado
             if (debeMostrarFila(numeroFila)) {
@@ -187,14 +188,15 @@ public class Simulador {
     private FilaVector generarFilaInicializacion(int numeroFila) {
         FilaVector fila = new FilaVector(numeroFila, reloj, "INICIALIZACION");
 
-        //TODO: FIJARSE DE PONER UN ARCHIVO O ALGO PARA DATOS DE INICIALIZACION, POR SI QUIEREN SIMULAR DESDE UN CASO
+        //Se utilisa solo una vez esta funcion por eso usamos this.ultimoRndLlegada
         //PARTICULAR.
 
         // Llegada_Barco
-        double rdnLlegada = generador.generarNumeroAleatorio();
-        double tiempoLlegada = generador.convertirAExponencial(rdnLlegada, configuracion.getMediaLlegadas());
-        fila.setRndLlegada(rdnLlegada);
-        fila.setProximaLlegada(tiempoLlegada);
+        if (this.fel.peek() != null) {
+            Evento primerEvento = this.fel.peek();
+            fila.setProximaLlegada(primerEvento.getTiempo());
+        }
+        fila.setRndLlegada(this.ultimoRndLlegada);
 
         //Bahia COLA
         fila.setCantidadBarcosBahia(bahia.size()); // 0
@@ -244,6 +246,8 @@ public class Simulador {
 
         barco.setTiempoLlegadaSistema(reloj);
 
+        cargarDatosPreviosFinLlegada();
+
         // 3. Decidir el camino del barco
         if (muelleLibre != null) {
             // HAY MUELLE LIBRE
@@ -291,6 +295,23 @@ public class Simulador {
         actualizarEstadoSistemaEnFilaVector();
     }
 
+    private void cargarDatosPreviosFinLlegada() {
+        if (ultimaFilaVector != null) {
+            double diferencia = reloj - this.ultimaFilaVector.getTiempo();
+            if (this.ultimaFilaVector.getTiempoRestanteMuelle1() > 0) {
+                double tiempoRestante = this.ultimaFilaVector.getTiempoRestanteMuelle1() - diferencia;
+                this.actualFilaVector.setTiempoRestanteMuelle1(tiempoRestante);
+                this.actualFilaVector.setFinDescarga1(this.reloj + tiempoRestante);
+            }
+            if (this.ultimaFilaVector.getTiempoRestanteMuelle2() > 0) {
+                double tiempoRestante = this.ultimaFilaVector.getTiempoRestanteMuelle2() - diferencia;
+                this.actualFilaVector.setTiempoRestanteMuelle2(tiempoRestante);
+                this.actualFilaVector.setFinDescarga2(this.reloj + tiempoRestante);
+            }
+
+        }
+    }
+
     /**
      * Procesa el fin de descarga de un barco.
      * Este método será llamado por el evento FinDescarga.
@@ -311,6 +332,8 @@ public class Simulador {
         }
 
         contadorBarcosAtendidos++;
+
+        this.actualFilaVector.setProximaLlegada(this.ultimaFilaVector.getProximaLlegada());
         // 2. Atender la cola (Bahía)
         if (!bahia.isEmpty() && muelleOcupado != null) {
             //
@@ -384,6 +407,13 @@ public class Simulador {
                 grua.setBarcoAsignado(barco);
                 muelleDelBarco.asignarGrua(); // <<<--- ESTO FALTABA
                 gruasAsignadas++;
+                if (grua.getId() == 1) {
+                    this.actualFilaVector.setGrua1Estado(EstadoGrua.OCUPADA);
+                    this.actualFilaVector.setGrua1InicioOcupado(reloj);
+                } else if (grua.getId() == 2) {
+                    this.actualFilaVector.setGrua2Estado(EstadoGrua.OCUPADA);
+                    this.actualFilaVector.setGrua2InicioOcupado(reloj);
+                }
             }
         }
     }

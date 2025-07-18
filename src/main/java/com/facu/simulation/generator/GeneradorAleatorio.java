@@ -140,7 +140,8 @@ public class GeneradorAleatorio {
         if (rnd == 1.0) {
             rnd = 0.999999;
         }
-        return roundToFourDecimals(-media * Math.log(1 - rnd));
+        double result = -media * Math.log(1 - rnd);
+        return roundToFourDecimals(result);
     }
     
     /**

@@ -25,8 +25,10 @@ public class FilaVectorDTO {
     
     // Campos de descarga (muelle específicos)
     private double rndDescargaMuelle1;
+    private double tiempoRestanteMuelle1; // NUEVO: tiempo restante para descarga en muelle 1
     private double finDescarga1;
     private double rndDescargaMuelle2;
+    private double tiempoRestanteMuelle2; // NUEVO: tiempo restante para descarga en muelle 2
     private double finDescarga2;
     
     // Estados de bahía
@@ -77,8 +79,8 @@ public class FilaVectorDTO {
      */
     public FilaVectorDTO(int numeroFila, String evento, double tiempo,
                         double rndLlegada, double proximaLlegada,
-                        double rndDescargaMuelle1, double finDescarga1,
-                        double rndDescargaMuelle2, double finDescarga2,
+                        double rndDescargaMuelle1, double tiempoRestanteMuelle1, double finDescarga1,
+                        double rndDescargaMuelle2, double tiempoRestanteMuelle2, double finDescarga2,
                         int cantidadBarcosBahia,
                         String muelle1Estado, double muelle1InicioOcupado,
                         String muelle2Estado, double muelle2InicioOcupado,
@@ -100,8 +102,10 @@ public class FilaVectorDTO {
         this.rndLlegada = rndLlegada;
         this.proximaLlegada = proximaLlegada;
         this.rndDescargaMuelle1 = rndDescargaMuelle1;
+        this.tiempoRestanteMuelle1 = tiempoRestanteMuelle1;
         this.finDescarga1 = finDescarga1;
         this.rndDescargaMuelle2 = rndDescargaMuelle2;
+        this.tiempoRestanteMuelle2 = tiempoRestanteMuelle2;
         this.finDescarga2 = finDescarga2;
         this.cantidadBarcosBahia = cantidadBarcosBahia;
         this.muelle1Estado = muelle1Estado;

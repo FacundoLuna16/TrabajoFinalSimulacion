@@ -18,9 +18,11 @@ public class TablaMejorada extends JPanel {
     private JTable tabla;
     private DefaultTableModel modelo;
     private JScrollPane scrollPane;
+    private GeneradorColumnasTabla generadorColumnas;
     
     public TablaMejorada(int cantidadMuelles, int cantidadGruas) {
         setLayout(new BorderLayout());
+        generadorColumnas = new GeneradorColumnasTabla();
         crearTabla(cantidadMuelles, cantidadGruas);
         configurarEncabezados();
         
@@ -32,12 +34,14 @@ public class TablaMejorada extends JPanel {
     }
     
     /**
-     * Crea la tabla con columnas mejoradas
+     * Crea la tabla con columnas mejoradas usando el generador
      */
     private void crearTabla(int cantidadMuelles, int cantidadGruas) {
-        String[] columnas = generarColumnasmejoradas(cantidadMuelles, cantidadGruas);
+        // Usar el generador para obtener columnas base iniciales (sin barcos dinámicos)
+        String[] columnasBase = generadorColumnas.generarEncabezados(0);
+        String[] columnasConFormato = convertirAFormatoConColores(columnasBase);
         
-        modelo = new DefaultTableModel(columnas, 0) {
+        modelo = new DefaultTableModel(columnasConFormato, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -57,6 +61,73 @@ public class TablaMejorada extends JPanel {
     }
     
     /**
+     * Convierte las columnas base a formato con colores e indicadores de grupo
+     */
+    private String[] convertirAFormatoConColores(String[] columnasBase) {
+        List<String> columnasConFormato = new ArrayList<>();
+        
+        for (String columna : columnasBase) {
+            String columnaFormateada = convertirColumnaAFormatoConColor(columna);
+            columnasConFormato.add(columnaFormateada);
+        }
+        
+        return columnasConFormato.toArray(new String[0]);
+    }
+    
+    /**
+     * Convierte una columna individual al formato con colores
+     */
+    private String convertirColumnaAFormatoConColor(String columna) {
+        // Mapeo de columnas originales a formato con grupos
+        switch (columna) {
+            case "Fila": return "CTRL | Fila";
+            case "Evento": return "CTRL | Evento";
+            case "Reloj": return "CTRL | Reloj";
+            case "RNDLleg": return "LLEGADA | RNDLleg";
+            case "ProxLleg": return "LLEGADA | ProxLleg";
+            case "RNDM1": return "DESCARGA | RNDM1";
+            case "TiemRest1": return "DESCARGA | TiemRest1";  // NUEVO
+            case "FinDescM1": return "DESCARGA | FinDescM1";
+            case "RNDM2": return "DESCARGA | RNDM2";
+            case "TiemRest2": return "DESCARGA | TiemRest2";  // NUEVO
+            case "FinDescM2": return "DESCARGA | FinDescM2";
+            case "Bahía": return "BAHÍA | Cola";
+            case "M1Est": return "M1 | Estado";
+            case "M1Inic": return "M1 | Inicio";
+            case "M2Est": return "M2 | Estado";
+            case "M2Inic": return "M2 | Inicio";
+            case "G1Est": return "G1 | Estado";
+            case "G1Inic": return "G1 | Inicio";
+            case "G2Est": return "G2 | Estado";
+            case "G2Inic": return "G2 | Inicio";
+            case "MaxTPer": return "TPERM | MaxTPer";
+            case "MinTPer": return "TPERM | MinTPer";
+            case "AcTPer": return "TPERM | AcTPer";
+            case "CantB": return "TPERM | CantB";
+            case "MedTPer": return "TPERM | MedTPer";
+            case "M1AcTOc": return "UTIL | M1AcTOc";
+            case "M1Ut%": return "UTIL | M1Ut%";
+            case "M2AcTOc": return "UTIL | M2AcTOc";
+            case "M2Ut%": return "UTIL | M2Ut%";
+            case "G1AcTOc": return "UTIL | G1AcTOc";
+            case "G1Ut%": return "UTIL | G1Ut%";
+            case "G2AcTOc": return "UTIL | G2AcTOc";
+            case "G2Ut%": return "UTIL | G2Ut%";
+            case "BSist": return "BARCOS | BSist";
+            default:
+                // Para columnas dinámicas de barcos
+                if (columna.matches("B\\d+_ID")) {
+                    return "BARCOS | " + columna;
+                } else if (columna.matches("B\\d+_Estado")) {
+                    return "BARCOS | " + columna;
+                } else if (columna.matches("B\\d+_Ingr")) {
+                    return "BARCOS | " + columna;
+                }
+                return columna;
+        }
+    }
+    
+    /**
      * Configura los encabezados con colores y estilos
      */
     private void configurarEncabezados() {
@@ -67,47 +138,18 @@ public class TablaMejorada extends JPanel {
     }
     
     /**
-     * Genera nombres de columnas mejorados con indicadores de grupo
+     * Actualiza las columnas dinámicamente cuando hay más barcos
      */
-    private String[] generarColumnasmejoradas(int cantidadMuelles, int cantidadGruas) {
-        List<String> columnas = new ArrayList<>();
+    public void actualizarColumnasSegunBarcos(int maxBarcosEnSistema) {
+        String[] nuevasColumnas = generadorColumnas.generarEncabezados(maxBarcosEnSistema);
+        String[] columnasFormateadas = convertirAFormatoConColores(nuevasColumnas);
         
-        // Grupo Control
-        columnas.add("CTRL | Evento");
-        columnas.add("CTRL | Reloj");
-        
-        // Grupo Llegada
-        columnas.add("LLEGADA | RND");
-        columnas.add("LLEGADA | Prox");
-        
-        // Grupo Descarga por Muelle
-        for (int i = 1; i <= cantidadMuelles; i++) {
-            columnas.add("DESC-M" + i + " | RND");
-            columnas.add("DESC-M" + i + " | Fin");
+        // Solo actualizar si hay cambios en el número de columnas
+        if (modelo.getColumnCount() != columnasFormateadas.length) {
+            modelo.setColumnIdentifiers(columnasFormateadas);
+            configurarEncabezados();
+            ajustarAnchoColumnas();
         }
-        
-        // Grupo Bahía
-        columnas.add("BAHÍA | Cola");
-        
-        // Grupo Estados Muelles
-        for (int i = 1; i <= cantidadMuelles; i++) {
-            columnas.add("M" + i + " | Estado");
-            columnas.add("M" + i + " | Ocupado");
-            columnas.add("M" + i + " | Inicio");
-            columnas.add("M" + i + " | Fin");
-        }
-        
-        // Grupo Estados Grúas
-        for (int i = 1; i <= cantidadGruas; i++) {
-            columnas.add("G" + i + " | Estado");
-            columnas.add("G" + i + " | Barco");
-        }
-        
-        // Grupo Estadísticas
-        columnas.add("STATS | Ac.Perm");
-        columnas.add("STATS | Barcos");
-        
-        return columnas.toArray(new String[0]);
     }
     
     /**
@@ -148,16 +190,20 @@ public class TablaMejorada extends JPanel {
                 return new Color(240, 240, 240); // Gris claro
             } else if (texto.startsWith("LLEGADA")) {
                 return new Color(255, 228, 196); // Naranja claro
-            } else if (texto.startsWith("DESC-")) {
+            } else if (texto.startsWith("DESCARGA")) {
                 return new Color(176, 196, 222); // Azul claro
             } else if (texto.startsWith("BAHÍA")) {
                 return new Color(221, 160, 221); // Violeta claro
-            } else if (texto.startsWith("M")) {
+            } else if (texto.startsWith("M1") || texto.startsWith("M2")) {
                 return new Color(152, 251, 152); // Verde claro
-            } else if (texto.startsWith("G")) {
+            } else if (texto.startsWith("G1") || texto.startsWith("G2")) {
                 return new Color(255, 182, 193); // Rosa claro
-            } else if (texto.startsWith("STATS")) {
+            } else if (texto.startsWith("TPERM")) {
                 return new Color(255, 255, 224); // Amarillo claro
+            } else if (texto.startsWith("UTIL")) {
+                return new Color(173, 216, 230); // Azul muy claro
+            } else if (texto.startsWith("BARCOS")) {
+                return new Color(255, 218, 185); // Melocotón claro
             }
             return Color.WHITE;
         }

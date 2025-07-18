@@ -11,16 +11,14 @@ import java.util.*;
  */
 public class GeneradorColumnasTabla {
     
-    // Columnas base fijas de la simulación
+    // Columnas base fijas de la simulación según el nuevo orden solicitado
     private static final String[] COLUMNAS_BASE = {
-        "Fila", "Evento", "Reloj", "RND Llegada", "Prox Llegada",
-        "RND Descarga 1", "Fin Descarga 1", "RND Descarga 2", "Fin Descarga 2", "Bahia Cola",
-        "Muelle 1 Estado", "M1 Inicio Ocup.", "Muelle 2 Estado", "M2 Inicio Ocup.",
-        "Grua 1 Estado", "G1 Inicio Ocup.", "Grua 2 Estado", "G2 Inicio Ocup.",
-        "MAX T Perm.", "MIN T Perm.", "AC T Perm.", "AC Cant Barcos", "Media T Perm.",
-        "M1 AC T Ocupado", "M1 Util (%)", "M2 AC T Ocupado", "M2 Util (%)",
-        "G1 AC T Ocupado", "G1 Util (%)", "G2 AC T Ocupado", "G2 Util (%)",
-        "Barcos en Sistema"
+        "Fila", "Evento", "Reloj", "RNDLleg", "ProxLleg", 
+        "RNDM1", "TiemRest1", "FinDescM1", "RNDM2", "TiemRest2", "FinDescM2", "Bahía",
+        "M1Est", "M1Inic", "M2Est", "M2Inic", "G1Est", "G1Inic", "G2Est", "G2Inic",
+        "MaxTPer", "MinTPer", "AcTPer", "CantB", "MedTPer",
+        "M1AcTOc", "M1Ut%", "M2AcTOc", "M2Ut%", "G1AcTOc", "G1Ut%", "G2AcTOc", "G2Ut%",
+        "BSist"
     };
 
     /**
@@ -32,11 +30,11 @@ public class GeneradorColumnasTabla {
         // Agregar columnas base
         columnas.addAll(Arrays.asList(COLUMNAS_BASE));
         
-        // Agregar columnas dinámicas de barcos
+        // Agregar columnas dinámicas de barcos con el formato solicitado
         for (int i = 1; i <= maxBarcosEnSistema; i++) {
-            columnas.add("B_Slot" + i + "_ID");
-            columnas.add("B_Slot" + i + "_Estado");
-            columnas.add("B_Slot" + i + "_T_Ingreso");
+            columnas.add("B" + i + "_ID");
+            columnas.add("B" + i + "_Estado");
+            columnas.add("B" + i + "_Ingr");
         }
         
         return columnas.toArray(new String[0]);
@@ -64,39 +62,41 @@ public class GeneradorColumnasTabla {
     private List<Object> extraerDatosBase(FilaVectorDTO fila) {
         List<Object> datos = new ArrayList<>();
         
-        // Agregar campos en el mismo orden que COLUMNAS_BASE
-        datos.add(fila.getNumeroFila());
-        datos.add(fila.getEvento());
-        datos.add(formatearTiempo(fila.getTiempo()));
-        datos.add(formatearRnd(fila.getRndLlegada()));
-        datos.add(formatearTiempo(fila.getProximaLlegada()));
-        datos.add(formatearRnd(fila.getRndDescargaMuelle1()));
-        datos.add(formatearTiempo(fila.getFinDescarga1()));
-        datos.add(formatearRnd(fila.getRndDescargaMuelle2()));
-        datos.add(formatearTiempo(fila.getFinDescarga2()));
-        datos.add(fila.getCantidadBarcosBahia());
-        datos.add(fila.getMuelle1Estado());
-        datos.add(formatearTiempo(fila.getMuelle1InicioOcupado()));
-        datos.add(fila.getMuelle2Estado());
-        datos.add(formatearTiempo(fila.getMuelle2InicioOcupado()));
-        datos.add(fila.getGrua1Estado());
-        datos.add(formatearTiempo(fila.getGrua1InicioOcupado()));
-        datos.add(fila.getGrua2Estado());
-        datos.add(formatearTiempo(fila.getGrua2InicioOcupado()));
-        datos.add(formatearTiempo(fila.getMaxTiempoPermanencia()));
-        datos.add(formatearTiempo(fila.getMinTiempoPermanencia()));
-        datos.add(formatearTiempo(fila.getAcumuladorTiempoEsperaBahia()));
-        datos.add(fila.getContadorBarcosAtendidos());
-        datos.add(formatearTiempo(fila.getMediaTiempoPermanencia()));
-        datos.add(formatearTiempo(fila.getMuelle1AcTiempoOcupado()));
-        datos.add(String.format("%.2f", fila.getMuelle1Utilizacion()));
-        datos.add(formatearTiempo(fila.getMuelle2AcTiempoOcupado()));
-        datos.add(String.format("%.2f", fila.getMuelle2Utilizacion()));
-        datos.add(formatearTiempo(fila.getGrua1AcTiempoOcupado()));
-        datos.add(String.format("%.2f", fila.getGrua1Utilizacion()));
-        datos.add(formatearTiempo(fila.getGrua2AcTiempoOcupado()));
-        datos.add(String.format("%.2f", fila.getGrua2Utilizacion()));
-        datos.add(fila.getCantBarcosEnSistema());
+        // Agregar campos en el nuevo orden solicitado
+        datos.add(fila.getNumeroFila());                    // "Fila"
+        datos.add(fila.getEvento());                        // "Evento"
+        datos.add(formatearTiempo(fila.getTiempo()));       // "Reloj"
+        datos.add(formatearRnd(fila.getRndLlegada()));      // "RNDLleg"
+        datos.add(formatearTiempo(fila.getProximaLlegada())); // "ProxLleg"
+        datos.add(formatearRnd(fila.getRndDescargaMuelle1())); // "RNDM1"
+        datos.add(formatearTiempo(fila.getTiempoRestanteMuelle1())); // "TiemRest1" - NUEVO
+        datos.add(formatearTiempo(fila.getFinDescarga1())); // "FinDescM1"
+        datos.add(formatearRnd(fila.getRndDescargaMuelle2())); // "RNDM2"
+        datos.add(formatearTiempo(fila.getTiempoRestanteMuelle2())); // "TiemRest2" - NUEVO
+        datos.add(formatearTiempo(fila.getFinDescarga2())); // "FinDescM2"
+        datos.add(fila.getCantidadBarcosBahia());           // "Bahía"
+        datos.add(fila.getMuelle1Estado());                // "M1Est"
+        datos.add(formatearTiempo(fila.getMuelle1InicioOcupado())); // "M1Inic"
+        datos.add(fila.getMuelle2Estado());                // "M2Est"
+        datos.add(formatearTiempo(fila.getMuelle2InicioOcupado())); // "M2Inic"
+        datos.add(fila.getGrua1Estado());                  // "G1Est"
+        datos.add(formatearTiempo(fila.getGrua1InicioOcupado())); // "G1Inic"
+        datos.add(fila.getGrua2Estado());                  // "G2Est"
+        datos.add(formatearTiempo(fila.getGrua2InicioOcupado())); // "G2Inic"
+        datos.add(formatearTiempo(fila.getMaxTiempoPermanencia())); // "MaxTPer"
+        datos.add(formatearTiempo(fila.getMinTiempoPermanencia())); // "MinTPer"
+        datos.add(formatearTiempo(fila.getAcumuladorTiempoEsperaBahia())); // "AcTPer"
+        datos.add(fila.getContadorBarcosAtendidos());       // "CantB"
+        datos.add(formatearTiempo(fila.getMediaTiempoPermanencia())); // "MedTPer"
+        datos.add(formatearTiempo(fila.getMuelle1AcTiempoOcupado())); // "M1AcTOc"
+        datos.add(String.format("%.2f", fila.getMuelle1Utilizacion())); // "M1Ut%"
+        datos.add(formatearTiempo(fila.getMuelle2AcTiempoOcupado())); // "M2AcTOc"
+        datos.add(String.format("%.2f", fila.getMuelle2Utilizacion())); // "M2Ut%"
+        datos.add(formatearTiempo(fila.getGrua1AcTiempoOcupado())); // "G1AcTOc"
+        datos.add(String.format("%.2f", fila.getGrua1Utilizacion())); // "G1Ut%"
+        datos.add(formatearTiempo(fila.getGrua2AcTiempoOcupado())); // "G2AcTOc"
+        datos.add(String.format("%.2f", fila.getGrua2Utilizacion())); // "G2Ut%"
+        datos.add(fila.getCantBarcosEnSistema());           // "BSist"
         
         return datos;
     }

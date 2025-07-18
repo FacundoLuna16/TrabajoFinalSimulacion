@@ -28,11 +28,12 @@ public class VentanaPrincipal extends JFrame {
     private JTextField txtTiempoDescargaMin;
     private JTextField txtTiempoDescargaMax;
     private JTextField txtMostrarDesde;
-    private JTextField txtCantidadMuelles;
-    private JTextField txtMediaLlegada;
     private JTextField txtMostrarHasta;
+    private JTextField txtMediaLlegada;
     private JTextField txtDiasSimulacion;
-    private JTextField txtCantidadGruas;
+    private JTextField txtMostrarFilaDesde;
+    private JTextField txtMostrarFilaHasta;
+    private JCheckBox chkFiltrarPorFila;
     private JButton btnSimular;
     
     // Panel de resultados (estadísticas)
@@ -52,7 +53,7 @@ public class VentanaPrincipal extends JFrame {
     private DefaultTableModel modeloTabla;
     private GeneradorColumnasTabla generadorColumnas; // NUEVO: Generador de columnas dinámicas
     
-    // Variables de configuración actual
+    // Variables de configuración actual (fijos para 2 muelles y 2 grúas)
     private int cantidadMuellesActual = 2;
     private int cantidadGruasActual = 2;
     
@@ -113,10 +114,10 @@ public class VentanaPrincipal extends JFrame {
         panelConfiguracion.add(txtTiempoDescargaMin, gbc);
         
         gbc.gridx = 2;
-        panelConfiguracion.add(crearLabel("Cantidad de muelles"), gbc);
+        panelConfiguracion.add(crearLabel("Media Llegada (Días)"), gbc);
         gbc.gridx = 3;
-        txtCantidadMuelles = crearTextField("2");
-        panelConfiguracion.add(txtCantidadMuelles, gbc);
+        txtMediaLlegada = crearTextField("1.5");
+        panelConfiguracion.add(txtMediaLlegada, gbc);
         
         gbc.gridx = 4;
         panelConfiguracion.add(crearLabel("Días de Simulación"), gbc);
@@ -132,39 +133,52 @@ public class VentanaPrincipal extends JFrame {
         panelConfiguracion.add(txtTiempoDescargaMax, gbc);
         
         gbc.gridx = 2;
-        panelConfiguracion.add(crearLabel("Media Llegada (Días)"), gbc);
-        gbc.gridx = 3;
-        txtMediaLlegada = crearTextField("1.5");
-        panelConfiguracion.add(txtMediaLlegada, gbc);
-        
-        gbc.gridx = 4;
-        panelConfiguracion.add(crearLabel("Cantidad de Grúas"), gbc);
-        gbc.gridx = 5;
-        txtCantidadGruas = crearTextField("2");
-        panelConfiguracion.add(txtCantidadGruas, gbc);
-        
-        // Tercera fila
-        gbc.gridx = 0; gbc.gridy = 2;
         panelConfiguracion.add(crearLabel("Mostrar desde (día)"), gbc);
-        gbc.gridx = 1;
+        gbc.gridx = 3;
         txtMostrarDesde = crearTextField("5");
         panelConfiguracion.add(txtMostrarDesde, gbc);
         
-        gbc.gridx = 2;
+        gbc.gridx = 4;
         panelConfiguracion.add(crearLabel("Mostrar Hasta (día)"), gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 5;
         txtMostrarHasta = crearTextField("80");
         panelConfiguracion.add(txtMostrarHasta, gbc);
         
-        // Botón Simular (verde como en la imagen)
+        // Tercera fila
+        gbc.gridx = 0; gbc.gridy = 2;
+        panelConfiguracion.add(crearLabel("Mostrar desde (fila)"), gbc);
+        gbc.gridx = 1;
+        txtMostrarFilaDesde = crearTextField("5");
+        panelConfiguracion.add(txtMostrarFilaDesde, gbc);
+        
+        gbc.gridx = 2;
+        panelConfiguracion.add(crearLabel("Mostrar Hasta (fila)"), gbc);
+        gbc.gridx = 3;
+        txtMostrarFilaHasta = crearTextField("80");
+        panelConfiguracion.add(txtMostrarFilaHasta, gbc);
+        
+        // Switch para tipo de filtrado
         gbc.gridx = 4; gbc.gridy = 2;
-        gbc.gridwidth = 2;
+        gbc.gridwidth = 1;
+        chkFiltrarPorFila = new JCheckBox("Filtrar por fila");
+        chkFiltrarPorFila.setBackground(new Color(45, 45, 45));
+        chkFiltrarPorFila.setForeground(Color.WHITE);
+        chkFiltrarPorFila.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
+        chkFiltrarPorFila.addActionListener(e -> actualizarEstadoCamposFiltrado());
+        panelConfiguracion.add(chkFiltrarPorFila, gbc);
+        
+        // Botón Simular (verde como en la imagen)
+        gbc.gridx = 5; gbc.gridy = 2;
+        gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         btnSimular = new JButton("Simular");
         btnSimular.setBackground(new Color(0, 150, 0));
         btnSimular.setForeground(Color.WHITE);
         btnSimular.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
         panelConfiguracion.add(btnSimular, gbc);
+        
+        // Configurar estado inicial
+        actualizarEstadoCamposFiltrado();
     }
     
     /**
@@ -226,18 +240,40 @@ public class VentanaPrincipal extends JFrame {
     }
     
     /**
+     * Actualiza el estado de los campos de filtrado según el modo seleccionado.
+     */
+    private void actualizarEstadoCamposFiltrado() {
+        boolean filtrarPorFila = chkFiltrarPorFila.isSelected();
+        
+        // Habilitar/deshabilitar campos según el modo
+        txtMostrarDesde.setEnabled(!filtrarPorFila);
+        txtMostrarHasta.setEnabled(!filtrarPorFila);
+        txtMostrarFilaDesde.setEnabled(filtrarPorFila);
+        txtMostrarFilaHasta.setEnabled(filtrarPorFila);
+        
+        // Cambiar color de fondo para indicar visualmente el estado
+        Color colorHabilitado = Color.BLACK;
+        Color colorDeshabilitado = new Color(60, 60, 60);
+        Color textoHabilitado = Color.WHITE;
+        Color textoDeshabilitado = Color.GRAY;
+        
+        txtMostrarDesde.setBackground(filtrarPorFila ? colorDeshabilitado : colorHabilitado);
+        txtMostrarHasta.setBackground(filtrarPorFila ? colorDeshabilitado : colorHabilitado);
+        txtMostrarFilaDesde.setBackground(!filtrarPorFila ? colorDeshabilitado : colorHabilitado);
+        txtMostrarFilaHasta.setBackground(!filtrarPorFila ? colorDeshabilitado : colorHabilitado);
+        
+        txtMostrarDesde.setForeground(filtrarPorFila ? textoDeshabilitado : textoHabilitado);
+        txtMostrarHasta.setForeground(filtrarPorFila ? textoDeshabilitado : textoHabilitado);
+        txtMostrarFilaDesde.setForeground(!filtrarPorFila ? textoDeshabilitado : textoHabilitado);
+        txtMostrarFilaHasta.setForeground(!filtrarPorFila ? textoDeshabilitado : textoHabilitado);
+    }
+    
+    /**
      * Actualiza el panel de utilizaciones cuando cambia la cantidad de recursos.
      */
     private void actualizarPanelUtilizaciones(int nuevosMuelles, int nuevasGruas) {
-        if (nuevosMuelles != cantidadMuellesActual || nuevasGruas != cantidadGruasActual) {
-            cantidadMuellesActual = nuevosMuelles;
-            cantidadGruasActual = nuevasGruas;
-            
-            panelUtilizaciones.removeAll();
-            crearPanelUtilizaciones();
-            panelUtilizaciones.revalidate();
-            panelUtilizaciones.repaint();
-        }
+        // Como los valores son fijos (2 muelles, 2 grúas), no necesitamos actualizar el panel
+        // pero mantenemos el método para compatibilidad
     }
     
     /**
@@ -266,18 +302,8 @@ public class VentanaPrincipal extends JFrame {
      * Actualiza la tabla cuando cambia la configuración de recursos.
      */
     private void actualizarTabla(int nuevosMuelles, int nuevasGruas) {
-        if (nuevosMuelles != cantidadMuellesActual || nuevasGruas != cantidadGruasActual) {
-            // Recrear la tabla con nueva configuración
-            remove(tablaMejorada);
-            cantidadMuellesActual = nuevosMuelles;
-            cantidadGruasActual = nuevasGruas;
-            
-            crearTablaVectorEstado();
-            add(tablaMejorada, BorderLayout.CENTER);
-            
-            revalidate();
-            repaint();
-        }
+        // Como los valores son fijos (2 muelles, 2 grúas), no necesitamos actualizar la tabla
+        // pero mantenemos el método para compatibilidad
     }
     
     /**
@@ -352,9 +378,9 @@ public class VentanaPrincipal extends JFrame {
             // Capturar y validar parámetros
             ConfiguracionSimulacion config = capturarConfiguracionDeUI();
             
-            // Actualizar interfaz según nueva configuración
-            actualizarPanelUtilizaciones(config.getCantidadMuelles(), config.getCantidadGruas());
-            actualizarTabla(config.getCantidadMuelles(), config.getCantidadGruas());
+            // Actualizar interfaz con valores fijos (2 muelles, 2 grúas)
+            actualizarPanelUtilizaciones(2, 2);
+            actualizarTabla(2, 2);
             
             // Mostrar estado de simulando
             mostrarEstadoSimulando(true);
@@ -384,11 +410,16 @@ public class VentanaPrincipal extends JFrame {
         double tiempoDescargaMin = Double.parseDouble(txtTiempoDescargaMin.getText().trim());
         double tiempoDescargaMax = Double.parseDouble(txtTiempoDescargaMax.getText().trim());
         double mediaLlegada = Double.parseDouble(txtMediaLlegada.getText().trim());
-        int cantidadMuelles = Integer.parseInt(txtCantidadMuelles.getText().trim());
-        int cantidadGruas = Integer.parseInt(txtCantidadGruas.getText().trim());
         int diasSimulacion = Integer.parseInt(txtDiasSimulacion.getText().trim());
         int mostrarDesde = Integer.parseInt(txtMostrarDesde.getText().trim());
         int mostrarHasta = Integer.parseInt(txtMostrarHasta.getText().trim());
+        int mostrarFilaDesde = Integer.parseInt(txtMostrarFilaDesde.getText().trim());
+        int mostrarFilaHasta = Integer.parseInt(txtMostrarFilaHasta.getText().trim());
+        boolean filtrarPorFila = chkFiltrarPorFila.isSelected();
+        
+        // Valores fijos para muelles y grúas
+        int cantidadMuelles = 2;
+        int cantidadGruas = 2;
         
         // Validaciones básicas
         if (tiempoDescargaMin <= 0 || tiempoDescargaMax <= 0 || tiempoDescargaMin >= tiempoDescargaMax) {
@@ -397,23 +428,43 @@ public class VentanaPrincipal extends JFrame {
         if (mediaLlegada <= 0) {
             throw new NumberFormatException("La media de llegada debe ser positiva");
         }
-        if (cantidadMuelles <= 0 || cantidadGruas <= 0) {
-            throw new NumberFormatException("Las cantidades de recursos deben ser positivas");
-        }
-        if (diasSimulacion <= 0 || mostrarDesde < 0 || mostrarHasta <= mostrarDesde) {
-            throw new NumberFormatException("Los días de simulación deben ser válidos");
+        if (diasSimulacion <= 0) {
+            throw new NumberFormatException("Los días de simulación deben ser positivos");
         }
         
-        return new ConfiguracionSimulacion(
-            mediaLlegada, 
-            tiempoDescargaMin, 
-            tiempoDescargaMax,
-            cantidadMuelles, 
-            cantidadGruas, 
-            diasSimulacion,
-            mostrarDesde,
-            mostrarHasta
-        );
+        // Validar según el modo de filtrado seleccionado
+        if (filtrarPorFila) {
+            if (mostrarFilaDesde < 0 || mostrarFilaHasta <= mostrarFilaDesde) {
+                throw new NumberFormatException("Las filas de visualización deben ser válidas (desde >= 0 y hasta > desde)");
+            }
+            // Usar constructor para filtro por fila
+            return new ConfiguracionSimulacion(
+                mediaLlegada, 
+                tiempoDescargaMin, 
+                tiempoDescargaMax,
+                cantidadMuelles, 
+                cantidadGruas, 
+                diasSimulacion,
+                mostrarFilaDesde,
+                mostrarFilaHasta,
+                true // esPorFila = true
+            );
+        } else {
+            if (mostrarDesde < 0 || mostrarHasta <= mostrarDesde) {
+                throw new NumberFormatException("Los días de visualización deben ser válidos (desde >= 0 y hasta > desde)");
+            }
+            // Usar constructor para filtro por día
+            return new ConfiguracionSimulacion(
+                mediaLlegada, 
+                tiempoDescargaMin, 
+                tiempoDescargaMax,
+                cantidadMuelles, 
+                cantidadGruas, 
+                diasSimulacion,
+                mostrarDesde,
+                mostrarHasta
+            );
+        }
     }
     
     /**
@@ -444,12 +495,8 @@ public class VentanaPrincipal extends JFrame {
         // Limpiar resultados anteriores
         modeloTabla.setRowCount(0);
         
-        // Actualizar encabezados si es necesario
-        String[] nuevasColumnas = generadorColumnas.generarEncabezados(maxBarcosEnSistema);
-        if (modeloTabla.getColumnCount() != nuevasColumnas.length) {
-            // Recrear modelo con nuevas columnas
-            modeloTabla.setColumnIdentifiers(nuevasColumnas);
-        }
+        // Actualizar columnas dinámicas según barcos en sistema
+        tablaMejorada.actualizarColumnasSegunBarcos(maxBarcosEnSistema);
         
         // Añadir filas usando el generador
         for (FilaVectorDTO filaDTO : filasDTO) {

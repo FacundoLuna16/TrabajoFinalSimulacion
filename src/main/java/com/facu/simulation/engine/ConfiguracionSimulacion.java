@@ -61,4 +61,5 @@ public class ConfiguracionSimulacion {
         this.mostrarFilaHasta = mostrarFilaHasta;
         this.mostrarPorDia = !esPorFila;
     }
+
 }
