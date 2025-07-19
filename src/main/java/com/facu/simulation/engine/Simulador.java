@@ -46,7 +46,10 @@ public class Simulador {
      */
     public Simulador(ConfiguracionSimulacion configuracion) {
         this.configuracion = configuracion;
+        // Inicializar el generador de números aleatorios con una semilla fija
         this.generador = new GeneradorAleatorio(12345); // Usar semilla fija para reproducibilidad
+        //Ocion de generar con semilla aleatoria
+        // this.generador = new GeneradorAleatorio(new Random().nextLong()); // Semilla aleatoria
 
         // Inicializar estructuras de datos
         this.fel = new PriorityQueue<>(); //

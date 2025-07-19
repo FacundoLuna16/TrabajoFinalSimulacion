@@ -29,6 +29,7 @@ public class TablaMejorada extends JPanel {
         scrollPane = new JScrollPane(tabla);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(1200, 720));
         
         add(scrollPane, BorderLayout.CENTER);
     }

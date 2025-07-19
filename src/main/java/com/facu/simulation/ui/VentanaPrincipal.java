@@ -76,8 +76,8 @@ public class VentanaPrincipal extends JFrame {
 
     // Valores por defecto para reset
     private final String[] VALORES_DEFAULT = {
-            "4",  // TiempoDescargaMin
-            "6",  // TiempoDescargaMax
+            "0.5",  // TiempoDescargaMin
+            "1.5",  // TiempoDescargaMax
             "1.25",  // MediaLlegada
             "90",   // DiasSimulacion
             "0",    // MostrarDesde
@@ -170,12 +170,11 @@ public class VentanaPrincipal extends JFrame {
         gridParametros.add(crearGrupoInput("Mostrar Hasta", txtMostrarHasta = crearTextField(VALORES_DEFAULT[5]), "día"));
         gridParametros.add(btnReset = crearBotonSecundario("🔄 Reset"));
 
-        // Fila 3: Desde Fila | Hasta Fila | Toggle | [vacío]
+        // Fila 3: MostrarHasta | Desde Fila | Hasta Fila | Toggle
         gridParametros.add(crearGrupoInput("Desde Fila", txtMostrarFilaDesde = crearTextField(VALORES_DEFAULT[6]), "fila"));
         gridParametros.add(crearGrupoInput("Hasta Fila", txtMostrarFilaHasta = crearTextField(VALORES_DEFAULT[7]), "fila"));
         JPanel panelToggle = crearPanelToggle();
         gridParametros.add(panelToggle);
-        gridParametros.add(crearEspacioVacio());
 
         panelParametros.add(gridParametros);
         panelConfiguracion.add(panelParametros);
@@ -419,10 +418,10 @@ public class VentanaPrincipal extends JFrame {
         boton.setForeground(Color.WHITE);
         boton.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createRaisedBevelBorder(),
-                BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                BorderFactory.createEmptyBorder(6, 12, 6, 11)
         ));
-        boton.setPreferredSize(new Dimension(120, 40));
-        boton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        boton.setPreferredSize(new Dimension(90, 32));
+        boton.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
         boton.setFocusPainted(false);
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -488,7 +487,7 @@ public class VentanaPrincipal extends JFrame {
         ));
         label.setOpaque(true);
         label.setBackground(COLOR_FONDO_PANEL);
-        label.setPreferredSize(new Dimension(100, 36));
+        label.setPreferredSize(new Dimension(120, 36));
         return label;
     }
 
