@@ -109,10 +109,10 @@ public class TablaMejorada extends JPanel {
             case "M1Ut%": return "UTIL | M1Ut%";
             case "M2AcTOc": return "UTIL | M2AcTOc";
             case "M2Ut%": return "UTIL | M2Ut%";
-            case "G1AcTOc": return "UTIL | G1AcTOc";
-            case "G1Ut%": return "UTIL | G1Ut%";
-            case "G2AcTOc": return "UTIL | G2AcTOc";
-            case "G2Ut%": return "UTIL | G2Ut%";
+            case "G1AcTOc": return "GUTIL | G1AcTOc";
+            case "G1Ut%": return "GUTIL | G1Ut%";
+            case "G2AcTOc": return "GUTIL | G2AcTOc";
+            case "G2Ut%": return "GUTIL | G2Ut%";
             case "BSist": return "BARCOS | BSist";
             default:
                 // Para columnas dinámicas de barcos
@@ -202,6 +202,8 @@ public class TablaMejorada extends JPanel {
                 return new Color(255, 255, 224); // Amarillo claro
             } else if (texto.startsWith("UTIL")) {
                 return new Color(173, 216, 230); // Azul muy claro
+            } else if (texto.startsWith("GUTIL")) {
+                return new Color(218, 173, 230);
             } else if (texto.startsWith("BARCOS")) {
                 return new Color(255, 218, 185); // Melocotón claro
             }
