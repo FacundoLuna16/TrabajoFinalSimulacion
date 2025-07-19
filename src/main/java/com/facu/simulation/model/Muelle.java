@@ -2,12 +2,16 @@ package com.facu.simulation.model;
 
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 public class Muelle {
     private int id;
     private EstadoMuelle estado;
     private Barco barcoAtendido;
     private int gruasAsignadas;
+    private List<Grua> gruas; // Lista de grúas asignadas al muelle
     private double tiempoInicioOcupado;
     private double acumuladorTiempoOcupado;
     
@@ -18,6 +22,7 @@ public class Muelle {
         this.gruasAsignadas = 0;
         this.tiempoInicioOcupado = 0;
         this.acumuladorTiempoOcupado = 0;
+        this.gruas = new ArrayList<>();
     }
 
     public void asignarGrua() {
@@ -53,6 +58,7 @@ public class Muelle {
             acumularTiempoOcupado(tiempoActual - tiempoInicioOcupado);
         }
         this.estado = EstadoMuelle.LIBRE;
+        this.gruas = new ArrayList<>(); // Limpiamos la lista de grúas
         this.barcoAtendido = null;
         this.gruasAsignadas = 0;
     }

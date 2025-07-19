@@ -26,11 +26,7 @@ public class Grua {
     public void acumularTiempoOcupado(double tiempo) {
         this.acumuladorTiempoOcupado += tiempo;
     }
-    
-    public void setTiempoInicioOcupado(double tiempo) {
-        this.tiempoInicioOcupado = tiempo;
-    }
-    
+
     public void asignarAMuelle(Muelle muelle, double tiempoActual) {
         this.estado = EstadoGrua.OCUPADA;
         this.muelleAsignado = muelle;
@@ -40,7 +36,7 @@ public class Grua {
     
     public void liberar(double tiempoActual) {
         if (estado == EstadoGrua.OCUPADA) {
-            acumularTiempoOcupado(tiempoActual - tiempoInicioOcupado);
+//            acumularTiempoOcupado(tiempoActual - tiempoInicioOcupado);
             if (muelleAsignado != null) {
                 muelleAsignado.liberarGrua();
             }

@@ -87,7 +87,7 @@ public class VentanaPrincipal extends JFrame {
     };
 
     // Formato para números decimales
-    private DecimalFormat formatoDecimal = new DecimalFormat("#.##");
+    private DecimalFormat formatoDecimal = new DecimalFormat("0.00");
 
     // =============== CONSTRUCTOR ===============
 
@@ -217,9 +217,9 @@ public class VentanaPrincipal extends JFrame {
      */
     private void crearPanelUtilizaciones() {
         panelUtilizaciones = crearCardSection("Grado de Utilización de Recursos");
-        JPanel contenidoUtil = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        JPanel contenidoUtil = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 10));
         contenidoUtil.setBackground(COLOR_FONDO_CARD);
-        contenidoUtil.setBorder(BorderFactory.createEmptyBorder(10, 15, 15, 15));
+        contenidoUtil.setBorder(BorderFactory.createEmptyBorder(8, 10, 10, 10));
 
         lblUtilizacionMuelles = new JLabel[cantidadMuellesActual];
         lblUtilizacionGruas = new JLabel[cantidadGruasActual];
@@ -488,7 +488,7 @@ public class VentanaPrincipal extends JFrame {
         ));
         label.setOpaque(true);
         label.setBackground(COLOR_FONDO_PANEL);
-        label.setPreferredSize(new Dimension(80, 36));
+        label.setPreferredSize(new Dimension(100, 36));
         return label;
     }
 

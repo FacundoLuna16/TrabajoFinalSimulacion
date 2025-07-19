@@ -142,8 +142,15 @@ public class Simulador {
             reloj = eventoActual.getTiempo();
 
             //Inicializar la fila actual
-            this.actualFilaVector = new FilaVector(numeroFila, reloj, eventoActual.getClass().getSimpleName());
-
+            if (eventoActual instanceof LlegadaBarco) {
+                this.actualFilaVector = new FilaVector(
+                        numeroFila,
+                        reloj,
+                        eventoActual.getClass().getSimpleName() + "(" + this.contadorBarcosGenerados + ")"
+                );
+            } else {
+                this.actualFilaVector = new FilaVector(numeroFila, reloj, eventoActual.getClass().getSimpleName());
+            }
             // Procesar el evento actual
             eventoActual.procesar(this);
 
@@ -311,6 +318,8 @@ public class Simulador {
         reasignarGruasYRecalcularTiempos();
         // 4. ACTUALIZAR ESTADO ACTUAL DEL SISTEMA EN LA FILA VECTOR
         actualizarEstadoSistemaEnFilaVector();
+
+
     }
 
     private void cargarDatosPreviosFinLlegada() {
@@ -336,6 +345,7 @@ public class Simulador {
      */
     public void procesarFinDescarga(Barco barcoTerminado) {
         // 1. Liberar recursos: eliminar barco del muelle
+        this.actualFilaVector.setEvento(this.actualFilaVector.getEvento() + " (" + barcoTerminado.getId() + ")");
         Muelle muelleOcupado = null;
         for (Muelle muelle : muelles) {
             if (muelle.getBarcoAtendido() != null &&
@@ -435,6 +445,21 @@ public class Simulador {
 
         // 5. Actualizar estado del sistema
         actualizarEstadoSistemaEnFilaVector();
+
+        if (this.ultimaFilaVector.getGrua1Estado().equals(EstadoGrua.OCUPADA) &&
+                this.actualFilaVector.getGrua1Estado().equals(EstadoGrua.LIBRE)&&
+                this.actualFilaVector.getEvento().startsWith("FinDescarga")
+        ) {
+            this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado() +
+                    (this.reloj - this.ultimaFilaVector.getGrua1InicioOcupado()));
+        }
+        if (this.ultimaFilaVector.getGrua2Estado().equals(EstadoGrua.OCUPADA) &&
+                this.actualFilaVector.getGrua2Estado().equals(EstadoGrua.LIBRE)&&
+                this.actualFilaVector.getEvento().startsWith("FinDescarga")
+        ) {
+            this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
+                    (this.reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
+        }
     }
 
     private void asignarGruasABarco(Barco barco, int cantidadGruas) {
@@ -446,13 +471,37 @@ public class Simulador {
             if (grua.estaLibre() && gruasAsignadas < cantidadGruas) {
                 grua.setEstado(EstadoGrua.OCUPADA);
                 grua.setBarcoAsignado(barco);
+                grua.setMuelleAsignado(muelleDelBarco);
                 grua.setTiempoInicioOcupado(reloj); // ¡ESTO ES LO QUE FALTABA!
+                muelleDelBarco.getGruas().add(grua);
                 muelleDelBarco.asignarGrua();
                 gruasAsignadas++;
-                if (grua.getId() == 1) {
+                boolean consulta1 = this.ultimaFilaVector.getGrua1Estado().equals(EstadoGrua.LIBRE);
+                boolean consulta1a = this.actualFilaVector.getEvento().startsWith("FinDescarga");
+                boolean consulta2 = this.ultimaFilaVector.getGrua2Estado().equals(EstadoGrua.LIBRE);
+                boolean consulta2a = this.actualFilaVector.getEvento().startsWith("FinDescarga");
+
+                if (grua.getId() == 1 && consulta1a) {
+                    this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado() +
+                            (this.reloj - this.ultimaFilaVector.getGrua1InicioOcupado()));
                     this.actualFilaVector.setGrua1Estado(EstadoGrua.OCUPADA);
                     this.actualFilaVector.setGrua1InicioOcupado(reloj);
-                } else if (grua.getId() == 2) {
+                } else if (grua.getId() == 1 && consulta1) {
+//                    this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado() +
+//                            (reloj - this.ultimaFilaVector.getGrua1InicioOcupado()));
+                    this.actualFilaVector.setGrua1Estado(EstadoGrua.OCUPADA);
+                    this.actualFilaVector.setGrua1InicioOcupado(reloj);
+                }
+
+                if (grua.getId() == 2 && consulta2a) {
+                    this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
+                            (this.reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
+                    this.actualFilaVector.setGrua2Estado(EstadoGrua.OCUPADA);
+                    this.actualFilaVector.setGrua2InicioOcupado(reloj);
+                }
+                else if (grua.getId() == 2 && consulta2) {
+//                    this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
+//                            (reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
                     this.actualFilaVector.setGrua2Estado(EstadoGrua.OCUPADA);
                     this.actualFilaVector.setGrua2InicioOcupado(reloj);
                 }
@@ -462,12 +511,12 @@ public class Simulador {
     private void actualizarEstadisticasBarcos() {
         // El contador de barcos atendidos se actualiza aquí para todos los casos
         actualFilaVector.setContadorBarcosAtendidos(ultimaFilaVector.getContadorBarcosAtendidos());
-        if (actualFilaVector.getEvento().equals("FinDescarga")) {
+        if (actualFilaVector.getEvento().startsWith("FinDescarga")) {
             actualFilaVector.setContadorBarcosAtendidos(actualFilaVector.getContadorBarcosAtendidos() + 1);
         }
 
         // Se copian las estadísticas de la fila anterior por si no hay cambios en este evento
-        if (!actualFilaVector.getEvento().equals("FinDescarga")) {
+        if (!actualFilaVector.getEvento().startsWith("FinDescarga")) {
             actualFilaVector.setAcumuladorTiempoEsperaBahia(ultimaFilaVector.getAcumuladorTiempoEsperaBahia());
             actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia());
             actualFilaVector.setMinTiempoPermanencia(ultimaFilaVector.getMinTiempoPermanencia());
@@ -531,8 +580,11 @@ public class Simulador {
         fel.removeIf(evento -> evento instanceof FinDescarga);
         List<Barco> barcosEnServicio = new ArrayList<>();
         for (Grua grua : gruas) { grua.liberar(reloj); }
+
+
         for (Muelle muelle: muelles) { 
-            muelle.setGruasAsignadas(0); 
+            muelle.setGruasAsignadas(0);
+            muelle.setGruas(new ArrayList<>()); // Limpiar grúas asignadas
             if (muelle.estaOcupado()){
                 Barco barco = muelle.getBarcoAtendido();
                 barcosEnServicio.add(barco);
@@ -554,6 +606,7 @@ public class Simulador {
             actualizarVectorConTiemposDeDescarga(barco, tiempoFinDescarga, tiempoFinalRecalculado);
 
         } else if (barcosEnServicio.size() == 2) {
+            //TODO ACA ES DONDE PASA EL CASO DE QUE UNA GRUA TENGA QUE SER REASIGNADA
             for (Barco barco : barcosEnServicio) {
                 asignarGruasABarco(barco, 1); // Asignar 1 grúa
 
@@ -610,12 +663,26 @@ public class Simulador {
                 if (this.actualFilaVector.getMuelle1InicioOcupado() == 0.0 && muelle.estaOcupado()) {
                     this.actualFilaVector.setMuelle1InicioOcupado(this.ultimaFilaVector.getMuelle1InicioOcupado());
                 }
+                if (this.actualFilaVector.getEvento().startsWith("FinDescarga") &&
+                this.ultimaFilaVector.getMuelle1Estado().equals(EstadoMuelle.OCUPADO)&&
+                        this.actualFilaVector.getMuelle1Estado().equals(EstadoMuelle.LIBRE)
+                ){
+                    this.actualFilaVector.setMuelle1AcTiempoOcupado(this.ultimaFilaVector.getMuelle1AcTiempoOcupado() +
+                            (this.reloj - this.ultimaFilaVector.getMuelle1InicioOcupado()));
+                }
 
 
             } else if (muelle.getId() == 2) {
                 this.actualFilaVector.setMuelle2Estado(muelle.getEstado());
                 if (this.actualFilaVector.getMuelle2InicioOcupado() == 0.0 && muelle.estaOcupado()) {
                     this.actualFilaVector.setMuelle2InicioOcupado(this.ultimaFilaVector.getMuelle2InicioOcupado());
+                }
+                if (this.actualFilaVector.getEvento().startsWith("FinDescarga") &&
+                        this.ultimaFilaVector.getMuelle2Estado().equals(EstadoMuelle.OCUPADO)&&
+                        this.actualFilaVector.getMuelle2Estado().equals(EstadoMuelle.LIBRE)
+                ){
+                    this.actualFilaVector.setMuelle2AcTiempoOcupado(this.ultimaFilaVector.getMuelle2AcTiempoOcupado() +
+                            (this.reloj - this.ultimaFilaVector.getMuelle2InicioOcupado()));
                 }
             }
         }
@@ -624,18 +691,8 @@ public class Simulador {
         for (Grua grua : gruas) {
             if (grua.getId() == 1) {
                 this.actualFilaVector.setGrua1Estado(grua.getEstado());
-                    if (grua.estaOcupada() && this.ultimaFilaVector.getGrua1InicioOcupado() != grua.getTiempoInicioOcupado()) {
-                        this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado() +
-                                (this.reloj - this.ultimaFilaVector.getGrua1InicioOcupado()));
-                        this.actualFilaVector.setGrua1InicioOcupado(grua.getTiempoInicioOcupado());
-                }
             } else if (grua.getId() == 2) {
                 this.actualFilaVector.setGrua2Estado(grua.getEstado());
-                if (grua.estaOcupada() && this.ultimaFilaVector.getGrua2InicioOcupado() != grua.getTiempoInicioOcupado()) {
-                    this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
-                            (this.reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
-                    this.actualFilaVector.setGrua2InicioOcupado(grua.getTiempoInicioOcupado());
-                }
             }
         }
 
@@ -663,6 +720,12 @@ public class Simulador {
         if (this.actualFilaVector.getGrua2AcTiempoOcupado() == 0.0) {
             this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado());
         }
+        if (this.actualFilaVector.getGrua1InicioOcupado() == 0.0 && this.actualFilaVector.getGrua1Estado().equals(EstadoGrua.OCUPADA)) {
+            this.actualFilaVector.setGrua1InicioOcupado(this.ultimaFilaVector.getGrua1InicioOcupado());
+        }
+        if (this.actualFilaVector.getGrua2InicioOcupado() == 0.0 && this.actualFilaVector.getGrua2Estado().equals(EstadoGrua.OCUPADA)) {
+            this.actualFilaVector.setGrua2InicioOcupado(this.ultimaFilaVector.getGrua2InicioOcupado());
+        }
 
         // 7. Actualizar porcentajes de utilización
         actualizarPorcentajesUtilizacion();
@@ -684,11 +747,6 @@ public class Simulador {
         this.actualFilaVector.setMinTiempoPermanencia(this.ultimaFilaVector.getMinTiempoPermanencia());
         this.actualFilaVector.setCantMaxBarcosEnSistema(this.ultimaFilaVector.getCantMaxBarcosEnSistema());
 
-        // Copiar acumuladores de tiempo ocupado
-        this.actualFilaVector.setMuelle1AcTiempoOcupado(this.ultimaFilaVector.getMuelle1AcTiempoOcupado());
-        this.actualFilaVector.setMuelle2AcTiempoOcupado(this.ultimaFilaVector.getMuelle2AcTiempoOcupado());
-        this.actualFilaVector.setGrua1AcTiempoOcupado(this.ultimaFilaVector.getGrua1AcTiempoOcupado());
-        this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado());
     }
 
     // ==================== MÉTODOS AUXILIARES ====================
