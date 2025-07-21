@@ -19,7 +19,7 @@ public class ConfiguracionSimulacion {
     private int cantidadGruas;
     
     // Control de simulación
-    private int diasSimulacion;
+    private double diasSimulacion;
     
     // Control de reporte (filtrado)
     private int mostrarDesde; // Día inicial para mostrar
@@ -32,7 +32,7 @@ public class ConfiguracionSimulacion {
      * Constructor para filtrar por DÍA.
      */
     public ConfiguracionSimulacion(double mediaLlegadas, double tiempoDescargaMin, double tiempoDescargaMax,
-                                 int cantidadMuelles, int cantidadGruas, int diasSimulacion, 
+                                 int cantidadMuelles, int cantidadGruas, double diasSimulacion,
                                  int mostrarDesde, int mostrarHasta) {
         this.mediaLlegadas = mediaLlegadas;
         this.tiempoDescargaMin = tiempoDescargaMin;
@@ -49,7 +49,7 @@ public class ConfiguracionSimulacion {
      * Constructor para filtrar por NÚMERO DE FILA.
      */
     public ConfiguracionSimulacion(double mediaLlegadas, double tiempoDescargaMin, double tiempoDescargaMax,
-                                 int cantidadMuelles, int cantidadGruas, int diasSimulacion, 
+                                 int cantidadMuelles, int cantidadGruas, double diasSimulacion,
                                  int mostrarFilaDesde, int mostrarFilaHasta, boolean esPorFila) {
         this.mediaLlegadas = mediaLlegadas;
         this.tiempoDescargaMin = tiempoDescargaMin;

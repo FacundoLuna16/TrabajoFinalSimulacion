@@ -622,7 +622,7 @@ public class VentanaPrincipal extends JFrame {
         double tiempoDescargaMin = Double.parseDouble(txtTiempoDescargaMin.getText().trim());
         double tiempoDescargaMax = Double.parseDouble(txtTiempoDescargaMax.getText().trim());
         double mediaLlegada = Double.parseDouble(txtMediaLlegada.getText().trim());
-        int diasSimulacion = Integer.parseInt(txtDiasSimulacion.getText().trim());
+        double diasSimulacion = Double.parseDouble(txtDiasSimulacion.getText().trim());
         int mostrarDesde = Integer.parseInt(txtMostrarDesde.getText().trim());
         int mostrarHasta = Integer.parseInt(txtMostrarHasta.getText().trim());
         int mostrarFilaDesde = Integer.parseInt(txtMostrarFilaDesde.getText().trim());

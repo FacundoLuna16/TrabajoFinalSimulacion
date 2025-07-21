@@ -114,7 +114,7 @@ public class TablaMejorada extends JPanel {
             case "G1Ut%": return "GUTIL | G1Ut%";
             case "G2AcTOc": return "GUTIL | G2AcTOc";
             case "G2Ut%": return "GUTIL | G2Ut%";
-            case "BSist": return "BARCOS | BSist";
+            case "BSist": return "CTRL | BSist";
             default:
                 // Para columnas dinámicas de barcos
                 if (columna.matches("B\\d+_ID")) {

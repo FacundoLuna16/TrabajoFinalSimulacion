@@ -138,7 +138,7 @@ public class Simulador {
             Evento eventoActual = fel.peek();
 
             // Si el tiempo del evento supera el tiempo máximo, terminamos
-            if (eventoActual.getTiempo() > tiempoMaximo) break;
+            if (eventoActual.getTiempo() >= tiempoMaximo) break;
 
             // Avanzar el reloj al tiempo del evento actual
             fel.poll();
