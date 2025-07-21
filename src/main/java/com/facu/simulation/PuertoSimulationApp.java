@@ -1,6 +1,6 @@
 package com.facu.simulation;
 
-import com.facu.simulation.ui.VentanaPrincipal;
+import com.facu.simulation.ui.VentanaPrincipalRefactorizada;
 import com.formdev.flatlaf.FlatLightLaf;
 import lombok.extern.java.Log;
 
@@ -51,7 +51,7 @@ public class PuertoSimulationApp {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new VentanaPrincipal().setVisible(true);
+                new VentanaPrincipalRefactorizada().setVisible(true);
                 log.info("Aplicación de simulación portuaria iniciada");
             }
         });

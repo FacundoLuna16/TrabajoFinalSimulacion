@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Versión simplificada de tabla con encabezados mejorados
- * que simula encabezados jerárquicos usando colores y texto.
+ * Tabla mejorada con encabezados jerárquicos reales integrados.
+ * Mantiene toda la funcionalidad original pero con encabezados jerárquicos verdaderos.
  */
 public class TablaMejorada extends JPanel {
     
@@ -19,30 +19,30 @@ public class TablaMejorada extends JPanel {
     private DefaultTableModel modelo;
     private JScrollPane scrollPane;
     private GeneradorColumnasTabla generadorColumnas;
+    private EncabezadosJerarquicos encabezadosJerarquicos;
     
     public TablaMejorada(int cantidadMuelles, int cantidadGruas) {
         setLayout(new BorderLayout());
         generadorColumnas = new GeneradorColumnasTabla();
-        crearTabla(cantidadMuelles, cantidadGruas);
-        configurarEncabezados();
-        
-        scrollPane = new JScrollPane(tabla);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setPreferredSize(new Dimension(1200, 720));
-        
-        add(scrollPane, BorderLayout.CENTER);
+        crearTablaConEncabezadosJerarquicos(cantidadMuelles, cantidadGruas);
     }
     
     /**
-     * Crea la tabla con columnas mejoradas usando el generador
+     * Crea la tabla con encabezados jerárquicos reales integrados
      */
-    private void crearTabla(int cantidadMuelles, int cantidadGruas) {
-        // Usar el generador para obtener columnas base iniciales (sin barcos dinámicos)
-        String[] columnasBase = generadorColumnas.generarEncabezados(0);
-        String[] columnasConFormato = convertirAFormatoConColores(columnasBase);
+    private void crearTablaConEncabezadosJerarquicos(int cantidadMuelles, int cantidadGruas) {
+        // Crear panel que contenga tanto encabezados jerárquicos como tabla
+        JPanel panelCompleto = new JPanel(new BorderLayout());
+        panelCompleto.setBackground(new Color(25, 25, 25));
         
-        modelo = new DefaultTableModel(columnasConFormato, 0) {
+        // 1. CREAR ENCABEZADOS JERÁRQUICOS REALES
+        encabezadosJerarquicos = new EncabezadosJerarquicos();
+        panelCompleto.add(encabezadosJerarquicos, BorderLayout.NORTH);
+        
+        // 2. CREAR TABLA SIN ENCABEZADO NORMAL (usamos el jerárquico)
+        String[] columnasBase = generadorColumnas.generarEncabezados(0);
+        
+        modelo = new DefaultTableModel(columnasBase, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -51,175 +51,151 @@ public class TablaMejorada extends JPanel {
         
         tabla = new JTable(modelo);
         tabla.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        tabla.setRowHeight(25);
-        tabla.getTableHeader().setReorderingAllowed(false);
+        tabla.setRowHeight(28);
+        tabla.setTableHeader(null); // IMPORTANTE: Sin encabezado normal, usamos el jerárquico
         
-        // Estilo de la tabla
-        tabla.setGridColor(Color.GRAY);
+        // Aplicar estilo oscuro consistente
+        tabla.setBackground(new Color(50, 50, 50));
+        tabla.setForeground(new Color(240, 240, 240));
+        tabla.setGridColor(new Color(100, 100, 100));
+        tabla.setSelectionBackground(new Color(100, 149, 237));
+        tabla.setSelectionForeground(Color.WHITE);
         tabla.setShowGrid(true);
         tabla.setIntercellSpacing(new Dimension(1, 1));
+        tabla.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 14));
         tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        // Configurar renderer personalizado para colorear celdas por grupos
+        configurarRendererColoreado();
+        
+        // 3. AGREGAR TABLA AL PANEL COMPLETO
+        panelCompleto.add(tabla, BorderLayout.CENTER);
+        
+        // 4. CREAR SCROLL PANE CON TODO EL CONTENIDO
+        scrollPane = new JScrollPane(panelCompleto);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(1200, 720));
+        scrollPane.setBackground(new Color(50, 50, 50));
+        scrollPane.getViewport().setBackground(new Color(50, 50, 50));
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(100, 100, 100), 1));
+        
+        add(scrollPane, BorderLayout.CENTER);
     }
     
     /**
-     * Convierte las columnas base a formato con colores e indicadores de grupo
+     * Configura un renderer personalizado para colorear las celdas de datos
+     * basándose en los colores de los encabezados padre pero más suaves
      */
-    private String[] convertirAFormatoConColores(String[] columnasBase) {
-        List<String> columnasConFormato = new ArrayList<>();
-        
-        for (String columna : columnasBase) {
-            String columnaFormateada = convertirColumnaAFormatoConColor(columna);
-            columnasConFormato.add(columnaFormateada);
-        }
-        
-        return columnasConFormato.toArray(new String[0]);
-    }
-    
-    /**
-     * Convierte una columna individual al formato con colores
-     */
-    private String convertirColumnaAFormatoConColor(String columna) {
-        // Mapeo de columnas originales a formato con grupos
-        switch (columna) {
-            case "Fila": return "CTRL | Fila";
-            case "Evento": return "CTRL | Evento";
-            case "Reloj": return "CTRL | Reloj";
-            case "RNDLleg": return "LLEGADA | RNDLleg";
-            case "ProxLleg": return "LLEGADA | ProxLleg";
-            case "RNDM1": return "DESCARGA | RNDM1";
-            case "TiemRest1": return "DESCARGA | TiemRest1";  // NUEVO
-            case "FinDescM1": return "DESCARGA | FinDescM1";
-            case "RNDM2": return "DESCARGA | RNDM2";
-            case "TiemRest2": return "DESCARGA | TiemRest2";  // NUEVO
-            case "FinDescM2": return "DESCARGA | FinDescM2";
-            case "Bahía": return "BAHÍA | Cola";
-            case "M1Est": return "M1 | Estado";
-            case "M1Inic": return "M1 | Inicio";
-            case "M2Est": return "M2 | Estado";
-            case "M2Inic": return "M2 | Inicio";
-            case "G1Est": return "G1 | Estado";
-            case "G1Inic": return "G1 | Inicio";
-            case "G2Est": return "G2 | Estado";
-            case "G2Inic": return "G2 | Inicio";
-            case "MaxTPer": return "TPERM | MaxTPer";
-            case "MinTPer": return "TPERM | MinTPer";
-            case "AcTPer": return "TPERM | AcTPer";
-            case "CantB": return "TPERM | CantB";
-            case "MedTPer": return "TPERM | MedTPer";
-            case "M1AcTOc": return "UTIL | M1AcTOc";
-            case "M1Ut%": return "UTIL | M1Ut%";
-            case "M2AcTOc": return "UTIL | M2AcTOc";
-            case "M2Ut%": return "UTIL | M2Ut%";
-            case "G1AcTOc": return "GUTIL | G1AcTOc";
-            case "G1Ut%": return "GUTIL | G1Ut%";
-            case "G2AcTOc": return "GUTIL | G2AcTOc";
-            case "G2Ut%": return "GUTIL | G2Ut%";
-            case "BSist": return "CTRL | BSist";
-            default:
-                // Para columnas dinámicas de barcos
-                if (columna.matches("B\\d+_ID")) {
-                    return "BARCOS | " + columna;
-                } else if (columna.matches("B\\d+_Estado")) {
-                    return "BARCOS | " + columna;
-                } else if (columna.matches("B\\d+_Ingr")) {
-                    return "BARCOS | " + columna;
+    private void configurarRendererColoreado() {
+        tabla.setDefaultRenderer(Object.class, new TableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                
+                // Crear label para la celda
+                JLabel label = new JLabel(value != null ? value.toString() : "");
+                label.setOpaque(true);
+                label.setFont(table.getFont());
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                
+                // Determinar color de fondo basado en la columna
+                Color colorFondo = obtenerColorSuavePorColumna(column);
+                
+                if (isSelected) {
+                    label.setBackground(table.getSelectionBackground());
+                    label.setForeground(table.getSelectionForeground());
+                } else {
+                    label.setBackground(colorFondo);
+                    label.setForeground(new Color(50, 50, 50)); // Texto oscuro sobre fondo claro
                 }
-                return columna;
-        }
+                
+                // Borde sutil
+                label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 1, 
+                    new Color(100, 100, 100)));
+                
+                return label;
+            }
+        });
     }
     
     /**
-     * Configura los encabezados con colores y estilos
+     * Obtiene un color suave para una columna basado en los grupos de encabezados
      */
-    private void configurarEncabezados() {
-        JTableHeader header = tabla.getTableHeader();
-        header.setDefaultRenderer(new EncabezadoMejoradoRenderer());
-        header.setPreferredSize(new Dimension(header.getPreferredSize().width, 40));
-        header.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 11));
+    private Color obtenerColorSuavePorColumna(int columna) {
+        // Definir rangos de columnas y sus colores suaves
+        // Basado en la estructura de EncabezadosJerarquicos
+        
+        if (columna >= 0 && columna <= 2) {
+            // CONTROL (3): Fila, Evento, Reloj - Gris muy suave
+            return new Color(248, 248, 248);
+        } else if (columna >= 3 && columna <= 4) {
+            // LLEGADA BARCO (2) - Beige muy suave
+            return new Color(255, 250, 240);
+        } else if (columna >= 5 && columna <= 7) {
+            // DESCARGA MUELLE 1 (3) - Azul muy suave
+            return new Color(245, 248, 252);
+        } else if (columna >= 8 && columna <= 10) {
+            // DESCARGA MUELLE 2 (3) - Azul más suave
+            return new Color(240, 245, 250);
+        } else if (columna == 11) {
+            // BAHÍA (1) - Rosa muy suave
+            return new Color(252, 248, 252);
+        } else if (columna >= 12 && columna <= 15) {
+            // ESTADOS MUELLES (4) - Verde muy suave
+            return new Color(248, 255, 248);
+        } else if (columna >= 16 && columna <= 19) {
+            // ESTADOS GRÚAS (4) - Rosa muy suave
+            return new Color(255, 250, 252);
+        } else if (columna >= 20 && columna <= 24) {
+            // T. PERMANENCIA (5) - Amarillo muy suave
+            return new Color(255, 255, 248);
+        } else if (columna >= 25 && columna <= 28) {
+            // UTILIZACIÓN MUELLE (4) - Azul claro muy suave
+            return new Color(245, 250, 255);
+        } else if (columna >= 29 && columna <= 32) {
+            // UTILIZACIÓN GRÚA (4) - Verde oliva muy suave
+            return new Color(250, 252, 245);
+        } else if (columna == 33) {
+            // BARCOS SISTEMA (1) - Naranja muy suave
+            return new Color(255, 252, 248);
+        } else {
+            // BARCOS DINÁMICOS - Variaciones suaves de naranja
+            int indiceBanco = (columna - 34) / 3 + 1;
+            int matiz = Math.max(240, 255 - (indiceBanco * 2));
+            return new Color(255, matiz, Math.max(235, matiz - 10));
+        }
     }
+    
+    // Métodos auxiliares removidos - ahora usamos encabezados jerárquicos reales
     
     /**
      * Actualiza las columnas dinámicamente cuando hay más barcos
+     * NUEVA VERSIÓN: También actualiza los encabezados jerárquicos
      */
     public void actualizarColumnasSegunBarcos(int maxBarcosEnSistema) {
         String[] nuevasColumnas = generadorColumnas.generarEncabezados(maxBarcosEnSistema);
-        String[] columnasFormateadas = convertirAFormatoConColores(nuevasColumnas);
         
         // Solo actualizar si hay cambios en el número de columnas
-        if (modelo.getColumnCount() != columnasFormateadas.length) {
-            modelo.setColumnIdentifiers(columnasFormateadas);
-            configurarEncabezados();
+        if (modelo.getColumnCount() != nuevasColumnas.length) {
+            // Actualizar modelo de tabla (SIN formato de colores, usamos columnas normales)
+            modelo.setColumnIdentifiers(nuevasColumnas);
+            
+            // IMPORTANTE: Actualizar encabezados jerárquicos
+            if (encabezadosJerarquicos != null) {
+                encabezadosJerarquicos.actualizarParaBarcos(maxBarcosEnSistema);
+            }
+            
             ajustarAnchoColumnas();
+            
+            // IMPORTANTE: Sincronizar encabezados jerárquicos con anchos reales
+            if (encabezadosJerarquicos != null) {
+                encabezadosJerarquicos.sincronizarConTabla(tabla);
+            }
         }
     }
     
-    /**
-     * Renderer personalizado para encabezados con colores por grupo
-     */
-    private class EncabezadoMejoradoRenderer extends JLabel implements TableCellRenderer {
-        
-        public EncabezadoMejoradoRenderer() {
-            setOpaque(true);
-            setHorizontalAlignment(CENTER);
-            setVerticalAlignment(CENTER);
-            setBorder(BorderFactory.createRaisedBevelBorder());
-            setFont(new Font(Font.SANS_SERIF, Font.BOLD, 10));
-        }
-        
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, 
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            
-            String texto = value.toString();
-            
-            // Determinar color según el grupo
-            Color colorFondo = determinarColorGrupo(texto);
-            Color colorTexto = Color.BLACK;
-            
-            setBackground(colorFondo);
-            setForeground(colorTexto);
-            
-            // Formatear el texto para mostrar en múltiples líneas
-            String textoFormateado = formatearTextoEncabezado(texto);
-            setText(textoFormateado);
-            
-            return this;
-        }
-        
-        private Color determinarColorGrupo(String texto) {
-            if (texto.startsWith("CTRL")) {
-                return new Color(240, 240, 240); // Gris claro
-            } else if (texto.startsWith("LLEGADA")) {
-                return new Color(255, 228, 196); // Naranja claro
-            } else if (texto.startsWith("DESCARGA")) {
-                return new Color(176, 196, 222); // Azul claro
-            } else if (texto.startsWith("BAHÍA")) {
-                return new Color(221, 160, 221); // Violeta claro
-            } else if (texto.startsWith("M1") || texto.startsWith("M2")) {
-                return new Color(152, 251, 152); // Verde claro
-            } else if (texto.startsWith("G1") || texto.startsWith("G2")) {
-                return new Color(255, 182, 193); // Rosa claro
-            } else if (texto.startsWith("TPERM")) {
-                return new Color(255, 255, 224); // Amarillo claro
-            } else if (texto.startsWith("UTIL")) {
-                return new Color(173, 216, 230); // Azul muy claro
-            } else if (texto.startsWith("GUTIL")) {
-                return new Color(218, 173, 230);
-            } else if (texto.startsWith("BARCOS")) {
-                return new Color(255, 218, 185); // Melocotón claro
-            }
-            return Color.WHITE;
-        }
-        
-        private String formatearTextoEncabezado(String texto) {
-            // Convertir "GRUPO | Subencabezado" a HTML con múltiples líneas
-            if (texto.contains(" | ")) {
-                String[] partes = texto.split(" \\| ");
-                return "<html><center><b>" + partes[0] + "</b><br>" + partes[1] + "</center></html>";
-            }
-            return "<html><center>" + texto + "</center></html>";
-        }
-    }
+    // Renderer antiguo removido - ahora usamos EncabezadosJerarquicos
     
     /**
      * Ajusta el ancho de las columnas automáticamente
@@ -239,25 +215,23 @@ public class TablaMejorada extends JPanel {
     }
     
     private int obtenerAnchoPreferido(TableColumn column, int columnIndex) {
-        int ancho = 0;
+        int ancho = 60; // Ancho mínimo base
         
-        // Verificar ancho del encabezado
-        TableCellRenderer headerRenderer = column.getHeaderRenderer();
-        if (headerRenderer == null) {
-            headerRenderer = tabla.getTableHeader().getDefaultRenderer();
-        }
+        // NOTA: No podemos usar el header normal porque es null (usamos encabezados jerárquicos)
+        // En su lugar, usamos anchos predefinidos según el índice de columna
         
-        Component headerComponent = headerRenderer.getTableCellRendererComponent(
-            tabla, column.getHeaderValue(), false, false, -1, columnIndex);
-        ancho = Math.max(ancho, headerComponent.getPreferredSize().width);
-        
-        // Verificar ancho del contenido (primeras 5 filas)
+        // Verificar ancho del contenido (primeras 5 filas) si hay datos
         int filasAVerificar = Math.min(5, tabla.getRowCount());
         for (int row = 0; row < filasAVerificar; row++) {
-            TableCellRenderer renderer = tabla.getCellRenderer(row, columnIndex);
-            Component component = renderer.getTableCellRendererComponent(
-                tabla, tabla.getValueAt(row, columnIndex), false, false, row, columnIndex);
-            ancho = Math.max(ancho, component.getPreferredSize().width);
+            try {
+                TableCellRenderer renderer = tabla.getCellRenderer(row, columnIndex);
+                Component component = renderer.getTableCellRendererComponent(
+                    tabla, tabla.getValueAt(row, columnIndex), false, false, row, columnIndex);
+                ancho = Math.max(ancho, component.getPreferredSize().width);
+            } catch (Exception e) {
+                // Si hay error, usar ancho base
+                break;
+            }
         }
         
         return ancho + 10; // Agregar padding
@@ -278,6 +252,7 @@ public class TablaMejorada extends JPanel {
     
     /**
      * Actualiza la tabla después de agregar nuevos datos
+     * NUEVA VERSIÓN: También actualiza los encabezados jerárquicos
      */
     public void actualizarVista() {
         SwingUtilities.invokeLater(() -> {
@@ -285,6 +260,16 @@ public class TablaMejorada extends JPanel {
             ajustarAnchoColumnas();
             tabla.revalidate();
             tabla.repaint();
+            
+            // IMPORTANTE: También actualizar encabezados jerárquicos
+            if (encabezadosJerarquicos != null) {
+                // Esperar a que la tabla se actualice completamente antes de sincronizar
+                SwingUtilities.invokeLater(() -> {
+                    encabezadosJerarquicos.sincronizarConTabla(tabla);
+                    encabezadosJerarquicos.revalidate();
+                    encabezadosJerarquicos.repaint();
+                });
+            }
         });
     }
 }
