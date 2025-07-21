@@ -25,6 +25,7 @@ public class GeneradorColumnasFX {
      */
     public void crearColumnasBase(TableView<FilaVectorDTO> tabla) {
         tabla.getColumns().clear(); // Limpiar columnas existentes
+        cacheBarcos.clear(); // Limpiar cache al recrear columnas
 
         // --- Grupo Control ---
         TableColumn<FilaVectorDTO, String> colControl = new TableColumn<>("Control");
@@ -147,14 +148,21 @@ public class GeneradorColumnasFX {
     }
 
     /**
-     * Método de utilidad para crear una columna de tabla con optimizaciones.
+     * Método de utilidad para crear una columna de tabla OPTIMIZADA como Swing.
      */
     private <T> TableColumn<T, String> crearColumna(String titulo, double ancho, java.util.function.Function<T, String> extractor, String cellStyleClass) {
         TableColumn<T, String> columna = new TableColumn<>(titulo);
         columna.setPrefWidth(ancho);
-        columna.setCellValueFactory(cellData -> new SimpleStringProperty(extractor.apply(cellData.getValue())));
-        columna.setCellFactory(tc -> new OptimizedTableCell<>(cellStyleClass));
+        
+        // OPTIMIZACIÓN CRÍTICA: Evitar crear nuevas Properties en cada celda
+        // En lugar de new SimpleStringProperty(), usamos ReadOnlyStringWrapper
+        columna.setCellValueFactory(cellData -> {
+            String value = extractor.apply(cellData.getValue());
+            return new javafx.beans.property.ReadOnlyStringWrapper(value);
+        });
+        
         columna.setSortable(false);
+        columna.setResizable(false);
         return columna;
     }
     
@@ -195,25 +203,45 @@ public class GeneradorColumnasFX {
         return (valor == -1.0 || valor == 0.0) ? "" : formato.format(valor);
     }
 
+    // Cache para evitar búsquedas repetidas como hace Swing
+    private final java.util.Map<String, String> cacheBarcos = new java.util.concurrent.ConcurrentHashMap<>();
+    
     /**
-     * Obtiene información específica de un barco en un slot.
+     * Obtiene información específica de un barco en un slot - ULTRA OPTIMIZADO.
      */
     private String obtenerInfoBarco(FilaVectorDTO fila, int slot, String tipoInfo) {
+        // Crear clave de cache única
+        String cacheKey = fila.getNumeroFila() + "_" + slot + "_" + tipoInfo;
+        
+        // Intentar obtener del cache primero
+        String cached = cacheBarcos.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        
         List<BarcoSlotDTO> barcos = fila.getBarcosEnSistema();
-        if (barcos == null) return "";
+        if (barcos == null || barcos.isEmpty()) {
+            cacheBarcos.put(cacheKey, "");
+            return "";
+        }
 
-        return barcos.stream()
-                .filter(b -> b.getSlotAsignado() == slot)
-                .map(b -> {
-                    switch (tipoInfo) {
-                        case "id": return String.valueOf(b.getId());
-                        case "estado":
-                            return (fila.getTiempo() < b.getTiempoInicioDescarga()) ? "EB" : "SD";
-                        case "ingreso": return formatear(b.getTiempoIngreso(), formatoTiempo);
-                        default: return "";
-                    }
-                })
-                .findFirst()
-                .orElse("");
+        // Optimización: usar un loop tradicional en lugar de streams
+        for (BarcoSlotDTO barco : barcos) {
+            if (barco.getSlotAsignado() == slot) {
+                String result;
+                switch (tipoInfo) {
+                    case "id": result = String.valueOf(barco.getId()); break;
+                    case "estado":
+                        result = (fila.getTiempo() < barco.getTiempoInicioDescarga()) ? "EB" : "SD"; break;
+                    case "ingreso": result = formatear(barco.getTiempoIngreso(), formatoTiempo); break;
+                    default: result = "";
+                }
+                cacheBarcos.put(cacheKey, result);
+                return result;
+            }
+        }
+        
+        cacheBarcos.put(cacheKey, "");
+        return "";
     }
 }

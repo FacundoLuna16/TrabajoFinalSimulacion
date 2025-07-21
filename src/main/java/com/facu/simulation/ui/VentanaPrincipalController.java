@@ -42,11 +42,6 @@ public class VentanaPrincipalController {
     @FXML private Label lblUtilizacionMuelle2;
     @FXML private Label lblUtilizacionGrua1;
     @FXML private Label lblUtilizacionGrua2;
-    @FXML private Label lblParamDescMin;
-    @FXML private Label lblParamDescMax;
-    @FXML private Label lblParamMediaLlegada;
-    @FXML private Label lblParamDiasSimulacion;
-    @FXML private Label lblParamRango;
     @FXML private TableView<FilaVectorDTO> tablaVectorEstado;
     @FXML private HBox panelFiltroDia;
     @FXML private HBox panelFiltroFila;
@@ -119,7 +114,9 @@ public class VentanaPrincipalController {
     private void ejecutarSimulacion() {
         try {
             ConfiguracionSimulacion config = capturarConfiguracionDeUI();
-            actualizarPanelParametros(config);
+            
+            // El panel de parámetros ya no existe en el nuevo diseño
+            
             mostrarEstadoSimulando(true);
 
             // Tarea en segundo plano para la simulación
@@ -162,7 +159,7 @@ public class VentanaPrincipalController {
         double tiempoDescargaMin = Double.parseDouble(txtTiempoDescargaMin.getText().trim());
         double tiempoDescargaMax = Double.parseDouble(txtTiempoDescargaMax.getText().trim());
         double mediaLlegada = Double.parseDouble(txtMediaLlegada.getText().trim());
-        int diasSimulacion = Integer.parseInt(txtDiasSimulacion.getText().trim());
+        double diasSimulacion = Double.parseDouble(txtDiasSimulacion.getText().trim());
         int mostrarDesde = Integer.parseInt(txtMostrarDesde.getText().trim());
         int mostrarHasta = Integer.parseInt(txtMostrarHasta.getText().trim());
         int mostrarFilaDesde = Integer.parseInt(txtMostrarFilaDesde.getText().trim());
@@ -206,20 +203,33 @@ public class VentanaPrincipalController {
         lblUtilizacionGrua2.setText(formatoDecimal.format(resultados.getUtilizacionGruas()[1]));
     }
 
+
     /**
-     * Llena la TableView con las filas de resultados de forma optimizada.
+     * Llena la TableView con las filas de resultados de forma ULTRA-OPTIMIZADA.
      */
     private void poblarTablaVectorDeEstado(List<FilaVectorDTO> filasDTO, int maxBarcosEnSistema) {
         // Actualizar columnas si es necesario
         generadorColumnas.actualizarColumnasDeBarcos(tablaVectorEstado, maxBarcosEnSistema);
 
-        // Usar setAll para mejor rendimiento en actualizaciones
-        ObservableList<FilaVectorDTO> items = tablaVectorEstado.getItems();
-        if (items == null) {
-            items = FXCollections.observableArrayList();
-            tablaVectorEstado.setItems(items);
-        }
-        items.setAll(filasDTO);
+        // OPTIMIZACIÓN EXTREMA: Suspender layout y updates
+        tablaVectorEstado.setDisable(true);
+        tablaVectorEstado.setVisible(false);
+        
+        // Usar Platform.runLater para diferir el procesamiento pesado
+        Platform.runLater(() -> {
+            try {
+                // Crear nueva lista observable
+                ObservableList<FilaVectorDTO> newItems = FXCollections.observableArrayList(filasDTO);
+                
+                // Reemplazar items de una vez
+                tablaVectorEstado.setItems(newItems);
+                
+            } finally {
+                // Rehabilitar la tabla
+                tablaVectorEstado.setDisable(false);
+                tablaVectorEstado.setVisible(true);
+            }
+        });
     }
 
     /**
@@ -266,12 +276,9 @@ public class VentanaPrincipalController {
         lblUtilizacionMuelle2.setText("--");
         lblUtilizacionGrua1.setText("--");
         lblUtilizacionGrua2.setText("--");
-        lblParamDescMin.setText("--");
-        lblParamDescMax.setText("--");
-        lblParamMediaLlegada.setText("--");
-        lblParamDiasSimulacion.setText("--");
-        lblParamRango.setText("--");
-
+        
+        // Los labels de parámetros ya no existen en el nuevo diseño
+        
         tablaVectorEstado.getItems().clear();
         generadorColumnas.crearColumnasBase(tablaVectorEstado); // Recrea columnas base
     }
@@ -285,23 +292,7 @@ public class VentanaPrincipalController {
         panelFiltroFila.setDisable(!filtrarPorFila);
     }
     
-    /**
-     * Actualiza el panel de parámetros con los valores de configuración.
-     */
-    private void actualizarPanelParametros(ConfiguracionSimulacion config) {
-        lblParamDescMin.setText(formatoDecimal.format(config.getTiempoDescargaMin()));
-        lblParamDescMax.setText(formatoDecimal.format(config.getTiempoDescargaMax()));
-        lblParamMediaLlegada.setText(formatoDecimal.format(config.getMediaLlegadas()));
-        lblParamDiasSimulacion.setText(String.valueOf(config.getDiasSimulacion()));
-        
-        String rango;
-        if (!config.isMostrarPorDia()) {
-            rango = "Filas " + config.getMostrarFilaDesde() + "-" + config.getMostrarFilaHasta();
-        } else {
-            rango = "Días " + config.getMostrarDesde() + "-" + config.getMostrarHasta();
-        }
-        lblParamRango.setText(rango);
-    }
+
     
     /**
      * Añade un listener a un TextField para permitir solo números enteros.
