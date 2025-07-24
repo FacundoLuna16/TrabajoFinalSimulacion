@@ -64,6 +64,9 @@ public class PanelParametros extends JPanel {
         
         crearCamposParametros(containerPrincipal);
         add(containerPrincipal);
+        
+        // Inicializar estado correcto de campos al crear el panel
+        inicializarEstadoCampos();
     }
     
     /**
@@ -215,5 +218,13 @@ public class PanelParametros extends JPanel {
         textoColor = !filtrarPorFila ? TemaOscuro.COLOR_TEXTO_SECUNDARIO : TemaOscuro.COLOR_TEXTO_PRINCIPAL;
         txtMostrarFilaDesde.setForeground(textoColor);
         txtMostrarFilaHasta.setForeground(textoColor);
+    }
+    
+    /**
+     * Inicializa el estado correcto de los campos al inicio
+     */
+    public void inicializarEstadoCampos() {
+        // Al inicio, checkbox sin marcar = filtrar por día (no por fila)
+        actualizarEstadoCamposFiltrado(false);
     }
 }

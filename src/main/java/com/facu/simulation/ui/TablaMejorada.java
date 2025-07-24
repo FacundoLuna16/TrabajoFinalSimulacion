@@ -96,7 +96,9 @@ public class TablaMejorada extends JPanel {
                 // Crear label para la celda
                 JLabel label = new JLabel(value != null ? value.toString() : "");
                 label.setOpaque(true);
-                label.setFont(table.getFont());
+                // Usar fuente bold para dar más volumen
+                Font fuenteOriginal = table.getFont();
+                label.setFont(new Font(fuenteOriginal.getName(), Font.BOLD, fuenteOriginal.getSize()));
                 label.setHorizontalAlignment(SwingConstants.CENTER);
                 
                 // Determinar color de fondo basado en la columna
@@ -107,7 +109,7 @@ public class TablaMejorada extends JPanel {
                     label.setForeground(table.getSelectionForeground());
                 } else {
                     label.setBackground(colorFondo);
-                    label.setForeground(new Color(50, 50, 50)); // Texto oscuro sobre fondo claro
+                    label.setForeground(new Color(240, 240, 240)); // Texto claro sobre fondo oscuro
                 }
                 
                 // Borde sutil
@@ -127,43 +129,43 @@ public class TablaMejorada extends JPanel {
         // Basado en la estructura de EncabezadosJerarquicos
         
         if (columna >= 0 && columna <= 2) {
-            // CONTROL (3): Fila, Evento, Reloj - Gris muy suave
-            return new Color(248, 248, 248);
+            // CONTROL (3): Fila, Evento, Reloj - Gris oscuro suave
+            return new Color(70, 70, 70);
         } else if (columna >= 3 && columna <= 4) {
-            // LLEGADA BARCO (2) - Beige muy suave
-            return new Color(255, 250, 240);
+            // LLEGADA BARCO (2) - Beige oscuro suave
+            return new Color(80, 75, 65);
         } else if (columna >= 5 && columna <= 7) {
-            // DESCARGA MUELLE 1 (3) - Azul muy suave
-            return new Color(245, 248, 252);
+            // DESCARGA MUELLE 1 (3) - Azul oscuro suave
+            return new Color(65, 70, 80);
         } else if (columna >= 8 && columna <= 10) {
-            // DESCARGA MUELLE 2 (3) - Azul más suave
-            return new Color(240, 245, 250);
+            // DESCARGA MUELLE 2 (3) - Azul más oscuro suave
+            return new Color(60, 65, 75);
         } else if (columna == 11) {
-            // BAHÍA (1) - Rosa muy suave
-            return new Color(252, 248, 252);
+            // BAHÍA (1) - Rosa oscuro suave
+            return new Color(75, 65, 75);
         } else if (columna >= 12 && columna <= 15) {
-            // ESTADOS MUELLES (4) - Verde muy suave
-            return new Color(248, 255, 248);
+            // ESTADOS MUELLES (4) - Verde oscuro suave
+            return new Color(65, 80, 65);
         } else if (columna >= 16 && columna <= 19) {
-            // ESTADOS GRÚAS (4) - Rosa muy suave
-            return new Color(255, 250, 252);
+            // ESTADOS GRÚAS (4) - Rosa oscuro suave
+            return new Color(80, 70, 75);
         } else if (columna >= 20 && columna <= 24) {
-            // T. PERMANENCIA (5) - Amarillo muy suave
-            return new Color(255, 255, 248);
+            // T. PERMANENCIA (5) - Amarillo oscuro suave
+            return new Color(80, 80, 65);
         } else if (columna >= 25 && columna <= 28) {
-            // UTILIZACIÓN MUELLE (4) - Azul claro muy suave
-            return new Color(245, 250, 255);
+            // UTILIZACIÓN MUELLE (4) - Azul claro oscuro suave
+            return new Color(65, 75, 85);
         } else if (columna >= 29 && columna <= 32) {
-            // UTILIZACIÓN GRÚA (4) - Verde oliva muy suave
-            return new Color(250, 252, 245);
+            // UTILIZACIÓN GRÚA (4) - Verde oliva oscuro suave
+            return new Color(75, 80, 65);
         } else if (columna == 33) {
-            // BARCOS SISTEMA (1) - Naranja muy suave
-            return new Color(255, 252, 248);
+            // BARCOS SISTEMA (1) - Naranja oscuro suave
+            return new Color(85, 75, 65);
         } else {
-            // BARCOS DINÁMICOS - Variaciones suaves de naranja
+            // BARCOS DINÁMICOS - Variaciones oscuras de naranja
             int indiceBanco = (columna - 34) / 3 + 1;
-            int matiz = Math.max(240, 255 - (indiceBanco * 2));
-            return new Color(255, matiz, Math.max(235, matiz - 10));
+            int base = Math.max(60, 85 - (indiceBanco * 2));
+            return new Color(base + 5, base, base - 5);
         }
     }
     

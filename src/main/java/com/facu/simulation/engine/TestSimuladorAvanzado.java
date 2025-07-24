@@ -20,7 +20,8 @@ public class TestSimuladorAvanzado {
             20,    // Días de simulación: 10 días
             0,    // Mostrar desde fila 25 (cuando ya hay más actividad)
             10,    // Hasta fila 35
-            true   // Filtro por fila
+            true,   // Filtro por fila
+            12345  // Semilla para reproducibilidad
         );
 
         // Crear y ejecutar simulador

@@ -101,6 +101,7 @@ public class EventHandlerSimulacion implements ActionListener {
         double tiempoDescargaMax = panelParametros.getTiempoDescargaMax();
         double mediaLlegada = panelParametros.getMediaLlegada();
         double diasSimulacion = panelParametros.getDiasSimulacion();
+        long semilla = panelParametros.getSemillaSeed();
         
         boolean filtrarPorFila = panelControles.isFiltrarPorFila();
         
@@ -114,7 +115,7 @@ public class EventHandlerSimulacion implements ActionListener {
             return new ConfiguracionSimulacion(
                     mediaLlegada, tiempoDescargaMin, tiempoDescargaMax,
                     cantidadMuelles, cantidadGruas, diasSimulacion,
-                    mostrarFilaDesde, mostrarFilaHasta, true
+                    mostrarFilaDesde, mostrarFilaHasta, true, semilla
             );
         } else {
             int mostrarDesde = panelParametros.getMostrarDesde();
@@ -123,7 +124,7 @@ public class EventHandlerSimulacion implements ActionListener {
             return new ConfiguracionSimulacion(
                     mediaLlegada, tiempoDescargaMin, tiempoDescargaMax,
                     cantidadMuelles, cantidadGruas, diasSimulacion,
-                    mostrarDesde, mostrarHasta
+                    mostrarDesde, mostrarHasta, semilla
             );
         }
     }

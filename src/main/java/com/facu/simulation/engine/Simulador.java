@@ -46,10 +46,8 @@ public class Simulador {
      */
     public Simulador(ConfiguracionSimulacion configuracion) {
         this.configuracion = configuracion;
-        // Inicializar el generador de números aleatorios con una semilla fija
-        this.generador = new GeneradorAleatorio(12345); // Usar semilla fija para reproducibilidad
-        //Ocion de generar con semilla aleatoria
-        // this.generador = new GeneradorAleatorio(new Random().nextLong()); // Semilla aleatoria
+        // Inicializar el generador de números aleatorios con la semilla de la configuración
+        this.generador = new GeneradorAleatorio(configuracion.getSemilla());
 
         // Inicializar estructuras de datos
         this.fel = new PriorityQueue<>(); //
@@ -322,6 +320,9 @@ public class Simulador {
         // 4. ACTUALIZAR ESTADO ACTUAL DEL SISTEMA EN LA FILA VECTOR
         actualizarEstadoSistemaEnFilaVector();
 
+        //TODO = FORZAR CAMBIO POR LAS DUDAS
+        actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia());
+
 
     }
 
@@ -463,6 +464,9 @@ public class Simulador {
             this.actualFilaVector.setGrua2AcTiempoOcupado(this.ultimaFilaVector.getGrua2AcTiempoOcupado() +
                     (this.reloj - this.ultimaFilaVector.getGrua2InicioOcupado()));
         }
+
+        // TODO FORZAR CAMBIO POR LAS DUDAS
+        actualFilaVector.setContadorBarcosQueEsperonEnBahia(ultimaFilaVector.getContadorBarcosQueEsperonEnBahia() + 1);
     }
 
     private void asignarGruasABarco(Barco barco, int cantidadGruas) {

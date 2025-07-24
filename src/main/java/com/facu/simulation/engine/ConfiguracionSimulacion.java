@@ -27,13 +27,16 @@ public class ConfiguracionSimulacion {
     private int mostrarFilaDesde; // Fila inicial para mostrar
     private int mostrarFilaHasta; // Fila final para mostrar
     private boolean mostrarPorDia = true; // true: filtra por día, false: filtra por fila
+    
+    // Semilla para el generador aleatorio
+    private long semilla;
 
     /**
      * Constructor para filtrar por DÍA.
      */
     public ConfiguracionSimulacion(double mediaLlegadas, double tiempoDescargaMin, double tiempoDescargaMax,
                                  int cantidadMuelles, int cantidadGruas, double diasSimulacion,
-                                 int mostrarDesde, int mostrarHasta) {
+                                 int mostrarDesde, int mostrarHasta, long semilla) {
         this.mediaLlegadas = mediaLlegadas;
         this.tiempoDescargaMin = tiempoDescargaMin;
         this.tiempoDescargaMax = tiempoDescargaMax;
@@ -43,6 +46,7 @@ public class ConfiguracionSimulacion {
         this.mostrarDesde = mostrarDesde;
         this.mostrarHasta = mostrarHasta;
         this.mostrarPorDia = true;
+        this.semilla = semilla;
     }
 
     /**
@@ -50,7 +54,7 @@ public class ConfiguracionSimulacion {
      */
     public ConfiguracionSimulacion(double mediaLlegadas, double tiempoDescargaMin, double tiempoDescargaMax,
                                  int cantidadMuelles, int cantidadGruas, double diasSimulacion,
-                                 int mostrarFilaDesde, int mostrarFilaHasta, boolean esPorFila) {
+                                 int mostrarFilaDesde, int mostrarFilaHasta, boolean esPorFila, long semilla) {
         this.mediaLlegadas = mediaLlegadas;
         this.tiempoDescargaMin = tiempoDescargaMin;
         this.tiempoDescargaMax = tiempoDescargaMax;
@@ -60,6 +64,7 @@ public class ConfiguracionSimulacion {
         this.mostrarFilaDesde = mostrarFilaDesde;
         this.mostrarFilaHasta = mostrarFilaHasta;
         this.mostrarPorDia = !esPorFila;
+        this.semilla = semilla;
     }
 
 }

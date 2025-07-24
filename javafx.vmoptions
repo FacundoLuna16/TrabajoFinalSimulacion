@@ -1,3 +1,0 @@
-# VM Options para JavaFX
---add-modules=javafx.controls,javafx.fxml
---add-opens=javafx.fxml/javafx.fxml=ALL-UNNAMED
